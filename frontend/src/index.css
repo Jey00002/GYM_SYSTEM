@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #0a0a0a;
+}
+
+@keyframes kenburns {
+  0%   { transform: scale(1) translate(0, 0); }
+  50%  { transform: scale(1.12) translate(-2%, 2%); }
+  100% { transform: scale(1) translate(0, 0); }
+}
+.kenburns { animation: kenburns 20s ease-in-out infinite; }
