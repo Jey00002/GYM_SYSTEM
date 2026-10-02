@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Check, Trophy, ArrowRight, User, LogOut, ChevronDown, Smartphone } from 'lucide-react';
+import { Menu, X, Check, Trophy, ArrowRight, User, LogOut, ChevronDown, Smartphone, Instagram, Facebook, Youtube, Twitter } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 import api from '../services/api';
 
@@ -162,7 +162,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-600/30 font-sans">
-      <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-white/5 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]' : 'bg-gradient-to-b from-black/80 to-transparent py-6'}`}>
+      <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-[#0a0a0a]/80 backdrop-blur-2xl py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]' : 'bg-gradient-to-b from-black/80 to-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <div className="text-3xl font-black tracking-tighter flex items-center gap-1">
             GYM<span className="text-blue-600">STAR</span>
@@ -319,32 +319,32 @@ export default function Landing() {
                     style={{ background: destacado ? `linear-gradient(135deg, ${discColor}, transparent 80%)` : 'rgba(255,255,255,0.05)' }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2rem]"></div>
-                    <div className="rounded-[calc(2rem-1px)] p-8 h-full flex flex-col bg-[#0a0a0a]/90 backdrop-blur-xl relative z-10 border border-white/5 shadow-2xl">
+                    <div className="rounded-[calc(2rem-1px)] p-6 h-full flex flex-col bg-[#0a0a0a]/90 backdrop-blur-xl relative z-10 border border-white/5 shadow-2xl">
                       {isFullAccess && (
-                        <div className="flex items-center gap-2 mb-4">
+                        <div className="flex items-center gap-2 mb-3">
                           <Trophy className="w-4 h-4" style={{ color: discColor }} />
                           <span style={{ color: discColor }} className="text-[10px] font-black uppercase tracking-[0.3em]">Premium</span>
                         </div>
                       )}
-                      <p className="text-white font-black text-2xl tracking-tight">{plan.nombrePlan}</p>
-                      <div className="mt-4 mb-8">
-                        <span className="text-gray-500 text-xs font-bold uppercase tracking-widest">Inversión</span>
-                        <p className="text-5xl font-black text-white mt-2 tracking-tighter">
+                      <p className="text-white font-black text-xl tracking-tight">{plan.nombrePlan}</p>
+                      <div className="mt-3 mb-6">
+                        <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Inversión</span>
+                        <p className="text-4xl font-black text-white mt-1 tracking-tighter">
                           S/ {Number(plan.tarifa)}
                         </p>
-                        <span className="text-gray-500 text-sm font-medium">/{plan.duracionDias} días</span>
+                        <span className="text-gray-500 text-xs font-medium">/{plan.duracionDias} días</span>
                       </div>
-                      <ul className="space-y-4 flex-1">
+                      <ul className="space-y-3 flex-1">
                         {feats.map((f, j) => (
-                          <li key={j} className="flex items-start gap-3 text-sm">
-                            <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: destacado ? discColor : '#374151' }} />
-                            <span className="text-gray-300 font-medium leading-relaxed">{f}</span>
+                          <li key={j} className="flex items-start gap-2 text-sm">
+                            <Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: destacado ? discColor : '#374151' }} />
+                            <span className="text-gray-300 text-xs font-medium leading-relaxed">{f}</span>
                           </li>
                         ))}
                       </ul>
                       <button
                         onClick={() => abrirPago(plan)}
-                        className={`mt-10 w-full py-4 rounded-xl font-black uppercase tracking-[0.1em] text-sm transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,99,235,0.3)] hover:-translate-y-1`}
+                        className={`mt-6 w-full py-3 rounded-xl font-black uppercase tracking-[0.1em] text-xs transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,99,235,0.3)] hover:-translate-y-1`}
                         style={{ 
                           backgroundColor: destacado ? discColor : 'rgba(255,255,255,0.05)',
                           color: destacado ? '#ffffff' : '#e5e7eb',
@@ -372,9 +372,18 @@ export default function Landing() {
               <div className="text-3xl font-black tracking-tighter mb-6 flex items-center gap-1">GYM<span className="text-blue-600">STAR</span></div>
               <p className="text-gray-400 max-w-sm mb-8 text-sm leading-relaxed">Elevando el estándar del fitness en Latinoamérica. Tecnología de punta, infraestructura premium y el mejor equipo de profesionales enfocados en tu rendimiento.</p>
               <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors cursor-pointer"><span className="font-bold text-sm">IG</span></div>
-                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors cursor-pointer"><span className="font-bold text-sm">FB</span></div>
-                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors cursor-pointer"><span className="font-bold text-sm">IN</span></div>
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors cursor-pointer text-gray-400 hover:text-white">
+                  <Instagram className="w-4 h-4" />
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors cursor-pointer text-gray-400 hover:text-white">
+                  <Facebook className="w-4 h-4" />
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors cursor-pointer text-gray-400 hover:text-white">
+                  <Youtube className="w-5 h-5" />
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors cursor-pointer text-gray-400 hover:text-white">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" /></svg>
+                </a>
               </div>
             </div>
             
