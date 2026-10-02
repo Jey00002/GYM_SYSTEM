@@ -62,6 +62,7 @@ export default function Entrenador() {
     try {
       await api.post(`/entrenamiento/mediciones`, {
         idSocio: socioSeleccionado.id,
+        idEntrenador: 1,
         peso: Number(medicionForm.peso),
         talla: Number(medicionForm.talla),
         porcentajeGrasa: medicionForm.porcentajeGrasa ? Number(medicionForm.porcentajeGrasa) : null
@@ -107,6 +108,7 @@ export default function Entrenador() {
     try {
       const payload = {
         idSocio: socioSeleccionado.id,
+        idEntrenador: 1,
         nombreRutina: rutinaForm.nombre || `Rutina ${rutinaForm.diaSemana}`,
         descripcion: rutinaForm.descripcion,
         diaSemana: rutinaForm.diaSemana,
