@@ -6,5 +6,6 @@ import lombok.Data;
 @Data
 public class AccesoRequest {
     @NotNull private Long idSocio;
-    @NotNull private Long idMetodoAcceso; // 1=QR, 2=DNI, 3=BIOMETRICO
+    @NotNull private Long idMetodoAcceso;
+    private Long idZona; // 1=QR, 2=DNI, 3=BIOMETRICO
 }
