@@ -22,4 +22,7 @@ public class Ejercicio {
 
     @Column(name = "grupo_muscular", length = 50)
     private String grupoMuscular;
+
+    @Column(name = "url_gif", length = 255)
+    private String urlGif;
 }

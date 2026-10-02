@@ -251,14 +251,29 @@ export default function Socio() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {rutina.ejercicios?.map((ej, i) => (
-                      <div key={i} className="bg-[#0a0a0a] border border-white/5 p-5 rounded-2xl flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-lg">{ej.ejercicio?.nombreEjercicio}</p>
-                          <p className="text-gray-500 text-xs uppercase">{ej.ejercicio?.grupoMuscular}</p>
+                      <div key={i} className="bg-[#0a0a0a] border border-white/5 p-5 rounded-2xl flex gap-5 items-center hover:border-blue-500/30 transition-colors group">
+                        {ej.ejercicio?.urlGif ? (
+                          <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-white/5 border border-white/10 relative">
+                            <div className="absolute inset-0 bg-blue-600/10 mix-blend-overlay group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+                            <img src={ej.ejercicio.urlGif} alt="Movimiento" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                          </div>
+                        ) : (
+                          <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center">
+                            <Dumbbell className="w-8 h-8 text-gray-500" />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <p className="font-bold text-lg leading-tight mb-1">{ej.ejercicio?.nombreEjercicio}</p>
+                          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-2">{ej.ejercicio?.grupoMuscular}</p>
+                          <p className="text-gray-400 text-xs leading-relaxed line-clamp-2" title={ej.ejercicio?.descripcion}>{ej.ejercicio?.descripcion}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-black text-2xl text-blue-600">{ej.series} <span className="text-sm text-gray-400 font-normal">series</span></p>
-                          <p className="font-black text-2xl text-blue-600">{ej.repeticiones} <span className="text-sm text-gray-400 font-normal">reps</span></p>
+                        <div className="text-right flex-shrink-0 pl-4 border-l border-white/5">
+                          <div className="mb-2">
+                            <p className="font-black text-xl text-white">{ej.series} <span className="text-[10px] text-gray-500 font-bold uppercase">sets</span></p>
+                          </div>
+                          <div>
+                            <p className="font-black text-xl text-blue-600">{ej.repeticiones} <span className="text-[10px] text-gray-500 font-bold uppercase">reps</span></p>
+                          </div>
                         </div>
                       </div>
                     ))}
