@@ -81,7 +81,7 @@ public class AccesoService {
                 if (finalZona == null) return true;
                 
                 // Control de Acceso por Zonas: Full Access (ID=4) entra a todo. Si no, debe coincidir disciplina.
-                Long idDisciplinaPlan = m.getPlan().getDisciplina().getId();
+                Long idDisciplinaPlan = m.getPlanMembresia().getDisciplina().getId();
                 Long idDisciplinaZona = finalZona.getDisciplina() != null ? finalZona.getDisciplina().getId() : null;
                 
                 return idDisciplinaPlan.equals(4L) || idDisciplinaPlan.equals(idDisciplinaZona);
