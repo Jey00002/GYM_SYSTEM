@@ -65,7 +65,7 @@ export default function Entrenador() {
         idEntrenador: 1,
         peso: Number(medicionForm.peso),
         talla: Number(medicionForm.talla),
-        porcentajeGrasa: medicionForm.porcentajeGrasa ? Number(medicionForm.porcentajeGrasa) : null
+        porcentajeGrasa: medicionForm.porcentajeGrasa ? Number(medicionForm.porcentajeGrasa) : 0
       });
       setModalAbierto(null);
       setMedicionForm({ peso: '', talla: '', porcentajeGrasa: '' });
