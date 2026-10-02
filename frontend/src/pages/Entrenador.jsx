@@ -146,7 +146,7 @@ export default function Entrenador() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans flex flex-col md:flex-row">
       <aside className="w-full md:w-64 bg-[#141414] border-r border-white/5 p-6 flex flex-col">
-        <div className="text-2xl italic-heavy tracking-tighter mb-10">
+        <div className="text-2xl font-black tracking-tighter mb-10">
           GYM<span className="text-blue-600">STAR</span>
         </div>
         
@@ -178,7 +178,7 @@ export default function Entrenador() {
         </AnimatePresence>
 
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl italic-heavy uppercase tracking-tight mb-8">Socios Activos</h2>
+          <h2 className="text-3xl font-black tracking-tighter uppercase tracking-tight mb-8">Socios Activos</h2>
           
           <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 mb-8 flex gap-4">
             <div className="relative flex-1">
@@ -235,7 +235,7 @@ export default function Entrenador() {
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#141414] border border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
               <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#0a0a0a] rounded-t-3xl">
                 <div>
-                  <h3 className="italic-heavy text-2xl">ASIGNAR RUTINA</h3>
+                  <h3 className="font-black tracking-tighter text-2xl">ASIGNAR RUTINA</h3>
                   <p className="text-blue-600 text-sm font-bold uppercase tracking-wider">{socioSeleccionado.nombres} {socioSeleccionado.apellidos}</p>
                 </div>
                 <button onClick={() => setModalAbierto(null)} className="text-gray-500 hover:text-white transition">Cerrar</button>
@@ -308,7 +308,7 @@ export default function Entrenador() {
                 <div className="w-12 h-12 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Activity className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="italic-heavy text-2xl">NUEVA MEDICIÓN</h3>
+                <h3 className="font-black tracking-tighter text-2xl">NUEVA MEDICIÓN</h3>
                 <p className="text-gray-400 text-sm">{socioSeleccionado.nombres} {socioSeleccionado.apellidos}</p>
               </div>
               

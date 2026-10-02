@@ -162,15 +162,16 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-600/30 font-sans">
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5 py-4' : 'bg-transparent py-6'}`}>
+      <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-white/5 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]' : 'bg-gradient-to-b from-black/80 to-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <div className="text-2xl italic-heavy tracking-tighter">
+          <div className="text-3xl font-black tracking-tighter flex items-center gap-1">
             GYM<span className="text-blue-600">STAR</span>
           </div>
           
-          <div className="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-wide">
-            <a href="#inicio" className="text-gray-400 hover:text-white transition">Inicio</a>
-            <a href="#planes" className="text-gray-400 hover:text-white transition">Planes</a>
+          <div className="hidden md:flex items-center gap-10 text-xs font-bold uppercase tracking-[0.15em]">
+            <a href="#inicio" className="text-gray-400 hover:text-blue-500 transition-colors">Inicio</a>
+            <a href="#planes" className="text-gray-400 hover:text-blue-500 transition-colors">Membresías</a>
+            <a href="#" className="text-gray-400 hover:text-blue-500 transition-colors">Nosotros</a>
             
             {token ? (
               <div className="relative">
@@ -219,7 +220,7 @@ export default function Landing() {
       <AnimatePresence>
         {menuOpen && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="fixed inset-0 z-40 bg-[#0a0a0a] pt-24 px-6 md:hidden">
-            <div className="flex flex-col gap-6 text-xl italic-heavy">
+            <div className="flex flex-col gap-6 text-xl font-black tracking-tighter">
               <a href="#inicio" onClick={() => setMenuOpen(false)}>INICIO</a>
               <a href="#planes" onClick={() => setMenuOpen(false)}>PLANES</a>
               <hr className="border-white/10" />
@@ -250,7 +251,7 @@ export default function Landing() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-bold uppercase tracking-widest mb-6">
               Gimnasio Premium 24/7
             </div>
-            <h1 className="text-5xl md:text-7xl italic-heavy leading-[0.9] mb-6 tracking-tighter">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-6 tracking-tighter">
               SIN EXCUSAS<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-yellow-500">SOLO RESULTADOS</span>
             </h1>
@@ -273,7 +274,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div {...anim()} className="text-center max-w-2xl mx-auto mb-16">
             <span className="text-blue-600 font-bold tracking-[0.2em] text-sm uppercase">ELIGE TU CAMINO</span>
-            <h2 className="text-4xl md:text-5xl italic-heavy mt-2 mb-4">MEMBRESÍAS <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-yellow-500">POR DISCIPLINA</span></h2>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter mt-2 mb-4">MEMBRESÍAS <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-yellow-500">POR DISCIPLINA</span></h2>
             <p className="text-gray-400">Selecciona tu disciplina favorita y descubre los planes que tenemos para ti. Sin cargos ocultos.</p>
           </motion.div>
           
@@ -361,24 +362,58 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="bg-[#050505] py-16 border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+      <footer className="bg-[#020202] py-24 border-t border-white/5 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[1px] bg-gradient-to-r from-transparent via-blue-600/50 to-transparent"></div>
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/5 rounded-full blur-[100px] pointer-events-none"></div>
+        
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-12 lg:gap-8">
             <div className="md:col-span-2">
-              <div className="text-2xl italic-heavy mb-6">GYM<span className="text-blue-600">STAR</span></div>
-              <p className="text-gray-500 max-w-sm mb-6 text-sm">Entrena con la mejor tecnología y profesionales dedicados a tu bienestar.</p>
+              <div className="text-3xl font-black tracking-tighter mb-6 flex items-center gap-1">GYM<span className="text-blue-600">STAR</span></div>
+              <p className="text-gray-400 max-w-sm mb-8 text-sm leading-relaxed">Elevando el estándar del fitness en Latinoamérica. Tecnología de punta, infraestructura premium y el mejor equipo de profesionales enfocados en tu rendimiento.</p>
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors cursor-pointer"><span className="font-bold text-sm">IG</span></div>
+                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors cursor-pointer"><span className="font-bold text-sm">FB</span></div>
+                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 transition-colors cursor-pointer"><span className="font-bold text-sm">IN</span></div>
+              </div>
             </div>
+            
             <div>
-              <p className="font-bold text-sm uppercase tracking-wider mb-4">Horarios</p>
-              <ul className="space-y-2 text-gray-500 text-sm">
-                <li>Lunes a Viernes: 5am - 11pm</li>
-                <li>Sábado: 6am - 10pm</li>
-                <li>Domingo: 7am - 2pm</li>
+              <p className="font-bold text-xs uppercase tracking-[0.2em] mb-6 text-white">Compañía</p>
+              <ul className="space-y-4 text-gray-400 text-sm">
+                <li><a href="#" className="hover:text-blue-500 transition-colors">Sobre Nosotros</a></li>
+                <li><a href="#" className="hover:text-blue-500 transition-colors">Carreras</a></li>
+                <li><a href="#" className="hover:text-blue-500 transition-colors">Prensa</a></li>
+                <li><a href="#" className="hover:text-blue-500 transition-colors">Contacto</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-bold text-xs uppercase tracking-[0.2em] mb-6 text-white">Servicios</p>
+              <ul className="space-y-4 text-gray-400 text-sm">
+                <li><a href="#" className="hover:text-blue-500 transition-colors">Planes Corporativos</a></li>
+                <li><a href="#" className="hover:text-blue-500 transition-colors">Entrenamiento Personal</a></li>
+                <li><a href="#" className="hover:text-blue-500 transition-colors">Nutrición Deportiva</a></li>
+                <li><a href="#" className="hover:text-blue-500 transition-colors">Fisioterapia</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-bold text-xs uppercase tracking-[0.2em] mb-6 text-white">Horarios</p>
+              <ul className="space-y-4 text-gray-400 text-sm">
+                <li className="flex justify-between border-b border-white/5 pb-2"><span>Lun - Vie</span><span className="text-white font-medium">05:00 - 23:00</span></li>
+                <li className="flex justify-between border-b border-white/5 pb-2"><span>Sábados</span><span className="text-white font-medium">06:00 - 22:00</span></li>
+                <li className="flex justify-between border-b border-white/5 pb-2"><span>Domingos</span><span className="text-white font-medium">07:00 - 14:00</span></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-white/5 mt-12 pt-8 flex flex-wrap justify-between gap-4">
-            <p className="text-gray-600 text-xs">© 2026 GYM STAR. Todos los derechos reservados.</p>
+          <div className="border-t border-white/10 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-gray-500 text-xs font-medium">© {new Date().getFullYear()} GYM STAR LLC. Todos los derechos reservados.</p>
+            <div className="flex gap-6 text-xs text-gray-500 font-medium">
+              <a href="#" className="hover:text-white transition-colors">Términos de Servicio</a>
+              <a href="#" className="hover:text-white transition-colors">Política de Privacidad</a>
+              <a href="#" className="hover:text-white transition-colors">Cookies</a>
+            </div>
           </div>
         </div>
       </footer>
@@ -439,7 +474,7 @@ export default function Landing() {
 
             {paso === 'sin-perfil' && (
               <div className="py-10 text-center">
-                <h3 className="italic-heavy text-2xl mb-3">COMPLETA TU PERFIL</h3>
+                <h3 className="font-black tracking-tighter text-2xl mb-3">COMPLETA TU PERFIL</h3>
                 <p className="text-gray-400 text-sm mb-8">Para poder realizar tu compra, es necesario que completes tu perfil ingresando tu DNI en el apartado de tus datos.</p>
                 <button onClick={() => { cerrarPago(); navigate('/socio'); }} className="bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl px-8 py-4 w-full transition-all uppercase">
                   Ir a Mis Datos
@@ -449,7 +484,7 @@ export default function Landing() {
 
             {paso === 'instrucciones' && (
               <>
-                <h3 className="italic-heavy text-2xl mb-1">PAGO CON YAPE</h3>
+                <h3 className="font-black tracking-tighter text-2xl mb-1">PAGO CON YAPE</h3>
                 <p className="text-gray-500 text-sm mb-6">
                   Plan <span className="text-white font-bold">{planPago.nombrePlan}</span> · <span className="text-blue-600 font-black">S/ {Number(planPago.tarifa)}</span>
                 </p>
@@ -489,7 +524,7 @@ export default function Landing() {
                 <div className="w-20 h-20 rounded-full bg-green-500/10 text-green-500 mx-auto flex items-center justify-center mb-5">
                   <Check className="w-10 h-10" strokeWidth={3} />
                 </div>
-                <h3 className="italic-heavy text-2xl mb-3">¡PAGO REGISTRADO!</h3>
+                <h3 className="font-black tracking-tighter text-2xl mb-3">¡PAGO REGISTRADO!</h3>
                 <p className="text-gray-400 text-sm mb-8">
                   Tu membresía <span className="text-white font-bold">{planPago.nombrePlan}</span> ha sido activada.
                 </p>

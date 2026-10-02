@@ -102,7 +102,7 @@ export default function Recepcion() {
         {/* Efecto de luz cinematográfico */}
         <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-blue-600/10 to-transparent pointer-events-none" />
         
-        <div className="text-3xl italic-heavy tracking-tighter mb-12 relative z-10">
+        <div className="text-3xl font-black tracking-tighter mb-12 relative z-10">
           GYM<span className="text-blue-600 drop-shadow-[0_0_15px_rgba(37,99,235,0.4)]">STAR</span>
         </div>
         
@@ -110,7 +110,7 @@ export default function Recepcion() {
           <div className="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <Fingerprint className="w-10 h-10 text-blue-600 mx-auto mb-3 drop-shadow-[0_0_10px_rgba(37,99,235,0.3)]" />
           <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Aforo en Tiempo Real</p>
-          <p className="text-5xl italic-heavy text-white tracking-tighter">{aforo.actual}</p>
+          <p className="text-5xl font-black tracking-tighter text-white tracking-tighter">{aforo.actual}</p>
           <div className="w-full bg-black/50 h-1.5 rounded-full mt-5 overflow-hidden border border-white/5">
             <motion.div 
               initial={{ width: 0 }}
@@ -156,7 +156,7 @@ export default function Recepcion() {
 
         <div className="max-w-6xl mx-auto">
           <header className="mb-12">
-            <h2 className="text-4xl lg:text-5xl italic-heavy uppercase tracking-tighter mb-2">Punto de Control</h2>
+            <h2 className="text-4xl lg:text-5xl font-black tracking-tighter uppercase tracking-tighter mb-2">Punto de Control</h2>
             <p className="text-gray-400 text-sm font-medium tracking-wide">Busca un socio para registrar su acceso a las instalaciones.</p>
           </header>
           

@@ -133,7 +133,7 @@ export default function Socio() {
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans flex flex-col md:flex-row">
       {/* SIDEBAR */}
       <aside className="w-full md:w-64 bg-[#141414] border-r border-white/5 p-6 flex flex-col">
-        <div className="text-2xl italic-heavy tracking-tighter mb-10">
+        <div className="text-2xl font-black tracking-tighter mb-10">
           GYM<span className="text-blue-600">STAR</span>
         </div>
         
@@ -186,7 +186,7 @@ export default function Socio() {
           
           {tab === 'membresia' && (
             <div className="max-w-2xl">
-              <h2 className="text-3xl italic-heavy mb-8">MI MEMBRESÍA</h2>
+              <h2 className="text-3xl font-black tracking-tighter mb-8">MI MEMBRESÍA</h2>
               {perfil?.membresiaActiva ? (
                 <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-3xl p-8 relative overflow-hidden shadow-2xl">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
@@ -239,7 +239,7 @@ export default function Socio() {
 
           {tab === 'rutina' && (
             <div className="max-w-4xl">
-              <h2 className="text-3xl italic-heavy mb-8">MI RUTINA</h2>
+              <h2 className="text-3xl font-black tracking-tighter mb-8">MI RUTINA</h2>
               {rutina ? (
                 <div className="bg-[#141414] border border-white/5 rounded-3xl p-8">
                   <div className="flex justify-between items-end mb-6 pb-6 border-b border-white/5">
@@ -279,7 +279,7 @@ export default function Socio() {
 
           {tab === 'progreso' && (
             <div className="max-w-4xl">
-              <h2 className="text-3xl italic-heavy mb-8">MI PROGRESO</h2>
+              <h2 className="text-3xl font-black tracking-tighter mb-8">MI PROGRESO</h2>
               <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 mb-8">
                 <h3 className="text-gray-400 font-bold mb-6 uppercase text-sm">Historial de Peso (kg)</h3>
                 <div className="h-72">
@@ -306,7 +306,7 @@ export default function Socio() {
 
           {tab === 'pagos' && (
             <div className="max-w-4xl">
-              <h2 className="text-3xl italic-heavy mb-8">MIS PAGOS</h2>
+              <h2 className="text-3xl font-black tracking-tighter mb-8">MIS PAGOS</h2>
               <div className="bg-[#141414] border border-white/5 rounded-3xl overflow-hidden">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-[#0a0a0a] text-gray-400 uppercase text-xs">
@@ -336,7 +336,7 @@ export default function Socio() {
 
           {tab === 'accesos' && (
             <div className="max-w-4xl">
-              <h2 className="text-3xl italic-heavy mb-8">MIS ACCESOS</h2>
+              <h2 className="text-3xl font-black tracking-tighter mb-8">MIS ACCESOS</h2>
               <div className="bg-[#141414] border border-white/5 rounded-3xl overflow-hidden">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-[#0a0a0a] text-gray-400 uppercase text-xs">
@@ -370,7 +370,7 @@ export default function Socio() {
 
           {tab === 'datos' && (
             <div className="max-w-2xl">
-              <h2 className="text-3xl italic-heavy mb-8">MIS DATOS</h2>
+              <h2 className="text-3xl font-black tracking-tighter mb-8">MIS DATOS</h2>
               <div className="bg-[#141414] border border-white/5 rounded-3xl p-8">
                 {mensajeForm && (
                   <div className={`p-4 rounded-xl mb-6 text-sm ${mensajeForm.type === 'success' ? 'bg-green-500/10 border border-green-500/30 text-green-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'}`}>

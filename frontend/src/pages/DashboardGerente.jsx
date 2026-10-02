@@ -69,7 +69,7 @@ export default function DashboardGerente() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans flex flex-col md:flex-row">
       <aside className="w-full md:w-64 bg-[#141414] border-r border-white/5 p-6 flex flex-col">
-        <div className="text-2xl font-black tracking-tighter tracking-tighter mb-10">
+        <div className="text-2xl font-black tracking-tighter mb-10">
           GYM<span className="text-blue-600">STAR</span>
         </div>
         
