@@ -298,58 +298,66 @@ export default function Landing() {
             })}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto items-center">
-            {planes.filter(p => p.disciplina?.nombre === (disciplinaActiva || 'Maquinas')).map((plan, i) => {
-              const discColor = plan.disciplina?.color || '#2563eb';
-              const destacado = plan.disciplina?.nombre === 'Full Access' || plan.nombrePlan.includes('Trimestral');
-              const isFullAccess = plan.disciplina?.nombre === 'Full Access';
-              const feats = FEATURES[plan.nombrePlan] || ['Acceso total a instalaciones', 'App GYM STAR'];
-              
-              return (
-                <motion.div
-                  key={plan.id}
-                  {...anim(i * 0.15)}
-                  className={`rounded-3xl p-1 ${destacado ? 'lg:scale-110 lg:-my-4' : ''}`}
-                  style={{ background: destacado ? `linear-gradient(to bottom, ${discColor}, #000)` : 'rgba(255,255,255,0.1)' }}
-                >
-                  <div className={`rounded-[20px] p-8 h-full flex flex-col bg-[#141414]`}>
-                    {isFullAccess && (
-                      <div className="flex items-center gap-2 mb-4">
-                        <Trophy className="w-4 h-4" style={{ color: discColor }} />
-                        <span style={{ color: discColor }} className="text-xs font-bold uppercase tracking-widest">El Más Elegido</span>
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto items-center">
+            <AnimatePresence mode="popLayout">
+              {planes.filter(p => p.disciplina?.nombre === (disciplinaActiva || 'Maquinas')).map((plan, i) => {
+                const discColor = plan.disciplina?.color || '#2563eb';
+                const destacado = plan.disciplina?.nombre === 'Full Access' || plan.nombrePlan.includes('Trimestral');
+                const isFullAccess = plan.disciplina?.nombre === 'Full Access';
+                const feats = FEATURES[plan.nombrePlan] || ['Acceso total a instalaciones', 'App GYM STAR'];
+                
+                return (
+                  <motion.div
+                    layout
+                    key={plan.id}
+                    initial={{ opacity: 0, scale: 0.8, y: 30, filter: 'blur(10px)' }}
+                    animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, scale: 0.8, y: -30, filter: 'blur(10px)' }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 }}
+                    className={`relative rounded-[2rem] p-[1px] group ${destacado ? 'lg:scale-105 z-10' : 'z-0'}`}
+                    style={{ background: destacado ? `linear-gradient(135deg, ${discColor}, transparent 80%)` : 'rgba(255,255,255,0.05)' }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2rem]"></div>
+                    <div className="rounded-[calc(2rem-1px)] p-8 h-full flex flex-col bg-[#0a0a0a]/90 backdrop-blur-xl relative z-10 border border-white/5 shadow-2xl">
+                      {isFullAccess && (
+                        <div className="flex items-center gap-2 mb-4">
+                          <Trophy className="w-4 h-4" style={{ color: discColor }} />
+                          <span style={{ color: discColor }} className="text-[10px] font-black uppercase tracking-[0.3em]">Premium</span>
+                        </div>
+                      )}
+                      <p className="text-white font-black text-2xl tracking-tight">{plan.nombrePlan}</p>
+                      <div className="mt-4 mb-8">
+                        <span className="text-gray-500 text-xs font-bold uppercase tracking-widest">Inversión</span>
+                        <p className="text-5xl font-black text-white mt-2 tracking-tighter">
+                          S/ {Number(plan.tarifa)}
+                        </p>
+                        <span className="text-gray-500 text-sm font-medium">/{plan.duracionDias} días</span>
                       </div>
-                    )}
-                    <p className="text-white font-bold text-xl">{plan.nombrePlan}</p>
-                    <div className="mt-4 mb-6">
-                      <span className="text-gray-500 text-sm">Desde</span>
-                      <p className="italic-heavy text-5xl text-white mt-1">
-                        S/ {Number(plan.tarifa)}
-                      </p>
-                      <span className="text-gray-500 text-sm">/{plan.duracionDias} días</span>
+                      <ul className="space-y-4 flex-1">
+                        {feats.map((f, j) => (
+                          <li key={j} className="flex items-start gap-3 text-sm">
+                            <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: destacado ? discColor : '#374151' }} />
+                            <span className="text-gray-300 font-medium leading-relaxed">{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        onClick={() => abrirPago(plan)}
+                        className={`mt-10 w-full py-4 rounded-xl font-black uppercase tracking-[0.1em] text-sm transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,99,235,0.3)] hover:-translate-y-1`}
+                        style={{ 
+                          backgroundColor: destacado ? discColor : 'rgba(255,255,255,0.05)',
+                          color: destacado ? '#ffffff' : '#e5e7eb',
+                          border: destacado ? 'none' : '1px solid rgba(255,255,255,0.1)'
+                        }}
+                      >
+                        {destacado ? 'Seleccionar Plan' : 'Elegir Plan'}
+                      </button>
                     </div>
-                    <ul className="space-y-3 flex-1">
-                      {feats.map((f, j) => (
-                        <li key={j} className="flex items-start gap-3 text-sm">
-                          <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: destacado ? discColor : '#6b7280' }} />
-                          <span className="text-gray-300">{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <button
-                      onClick={() => abrirPago(plan)}
-                      className={`mt-8 w-full py-4 rounded-xl font-black uppercase tracking-wide transition-all hover:scale-105`}
-                      style={{ 
-                        backgroundColor: destacado ? discColor : 'rgba(255,255,255,0.1)',
-                        color: destacado ? '#000' : '#fff'
-                      }}
-                    >
-                      {destacado ? 'INSCRÍBETE AHORA' : 'Elegir Plan'}
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
         </div>
       </section>
 
