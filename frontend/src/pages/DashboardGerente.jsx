@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
@@ -68,7 +69,7 @@ export default function DashboardGerente() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans flex flex-col md:flex-row">
       <aside className="w-full md:w-64 bg-[#141414] border-r border-white/5 p-6 flex flex-col">
-        <div className="text-2xl italic-heavy tracking-tighter mb-10">
+        <div className="text-2xl font-black tracking-tighter tracking-tighter mb-10">
           GYM<span className="text-blue-600">STAR</span>
         </div>
         
@@ -91,11 +92,16 @@ export default function DashboardGerente() {
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="text-3xl italic-heavy uppercase tracking-tight mb-2">Visión General</h2>
+              <h2 className="text-3xl font-black tracking-tighter uppercase tracking-tight mb-2">Visión General</h2>
               <p className="text-gray-400">Monitoreo en tiempo real de operaciones y finanzas.</p>
             </div>
           </div>
 
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, staggerChildren: 0.1 }}
+          >
           {error && (
             <div className="bg-red-500/10 border border-red-500/40 text-red-400 px-4 py-3 rounded-xl text-sm mb-8 flex items-center gap-3">
               <AlertTriangle className="w-5 h-5" /> Hubo un error cargando algunos reportes. Mostrando datos disponibles.
@@ -104,43 +110,55 @@ export default function DashboardGerente() {
 
           {/* KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-[#141414] border border-white/5 rounded-3xl p-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl p-6 shadow-2xl relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-blue-600/20 transition-all"></div>
               <div className="flex justify-between items-start mb-4">
                 <div className="w-12 h-12 rounded-xl bg-blue-600/10 flex items-center justify-center">
                   <Users className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
               <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Aforo Actual</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-4xl italic-heavy">{dashboard?.aforoActual || 0}</h3>
-                <span className="text-gray-500">/ {dashboard?.aforoMaximo || 100}</span>
+              <div className="flex items-baseline gap-2 relative z-10">
+                <h3 className="text-4xl font-black tracking-tighter">{dashboard?.aforoActual || 0}</h3>
+                <span className="text-gray-500 font-medium">/ {dashboard?.aforoMaximo || 100}</span>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="bg-[#141414] border border-white/5 rounded-3xl p-6">
-              <div className="flex justify-between items-start mb-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl p-6 shadow-2xl relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-green-500/20 transition-all"></div>
+              <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
                   <DollarSign className="w-6 h-6 text-green-500" />
                 </div>
               </div>
-              <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Ingresos del Mes</p>
-              <h3 className="text-4xl italic-heavy">S/ {Number(dashboard?.ingresosMensuales || 0).toFixed(2)}</h3>
-            </div>
+              <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1 relative z-10">Ingresos del Mes</p>
+              <h3 className="text-4xl font-black tracking-tighter relative z-10">S/ {Number(dashboard?.ingresosMensuales || 0).toFixed(2)}</h3>
+            </motion.div>
 
-            <div className="bg-[#141414] border border-white/5 rounded-3xl p-6">
-              <div className="flex justify-between items-start mb-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+              className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl p-6 shadow-2xl relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-blue-500/20 transition-all"></div>
+              <div className="flex justify-between items-start mb-4 relative z-10">
                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-blue-500" />
                 </div>
               </div>
-              <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Socios Activos</p>
-              <h3 className="text-4xl italic-heavy">{dashboard?.sociosActivos || 0}</h3>
-            </div>
+              <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1 relative z-10">Socios Activos</p>
+              <h3 className="text-4xl font-black tracking-tighter relative z-10">{dashboard?.sociosActivos || 0}</h3>
+            </motion.div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {/* GRAFICO INGRESOS */}
-            <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 lg:col-span-2">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl shadow-2xl p-6 lg:col-span-2">
               <h3 className="text-gray-400 font-bold mb-6 uppercase text-sm tracking-wider">Ingresos por Mes</h3>
               <div className="h-64">
                 {ingresos.length > 0 ? (
@@ -161,10 +179,10 @@ export default function DashboardGerente() {
                   <div className="h-full flex items-center justify-center text-gray-500">Sin datos de ingresos</div>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* ESTADOS MEMBRESIA PIE */}
-            <div className="bg-[#141414] border border-white/5 rounded-3xl p-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl shadow-2xl p-6">
               <h3 className="text-gray-400 font-bold mb-6 uppercase text-sm tracking-wider">Estados de Membresía</h3>
               <div className="h-64 relative">
                 {membresias.length > 0 ? (
@@ -193,18 +211,18 @@ export default function DashboardGerente() {
                 {membresias.length > 0 && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                      <p className="text-2xl italic-heavy">{membresias.reduce((a, b) => a + b.value, 0)}</p>
+                      <p className="text-2xl font-black tracking-tighter">{membresias.reduce((a, b) => a + b.value, 0)}</p>
                       <p className="text-[10px] text-gray-500 uppercase font-bold">Total</p>
                     </div>
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* VENTAS POR DISCIPLINA */}
-            <div className="bg-[#141414] border border-white/5 rounded-3xl p-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl shadow-2xl p-6">
               <h3 className="text-gray-400 font-bold mb-6 uppercase text-sm tracking-wider">Ventas por Disciplina</h3>
               <div className="h-64">
                 {ventasDisciplina.length > 0 ? (
@@ -229,10 +247,10 @@ export default function DashboardGerente() {
                   <div className="h-full flex items-center justify-center text-gray-500">Sin datos</div>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* MEMBRESÍAS POR VENCER */}
-            <div className="bg-[#141414] border border-white/5 rounded-3xl p-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl shadow-2xl p-6">
               <h3 className="text-gray-400 font-bold mb-6 uppercase text-sm tracking-wider">Próximos Vencimientos</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
@@ -263,9 +281,10 @@ export default function DashboardGerente() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </motion.div>
           </div>
           
+          </motion.div>
         </div>
       </main>
     </div>
