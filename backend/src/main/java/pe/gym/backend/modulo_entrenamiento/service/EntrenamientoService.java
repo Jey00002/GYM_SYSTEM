@@ -91,6 +91,10 @@ public class EntrenamientoService {
     }
     
     @Transactional
+    public List<Ejercicio> listarEjercicios() {
+        return ejercicioRepository.findAll();
+    }
+
     public void marcarEjercicioCompletado(Long idRutinaEjercicio) {
         RutinaEjercicio re = rutinaEjercicioRepository.findById(idRutinaEjercicio)
                 .orElseThrow(() -> new RuntimeException("Registro no encontrado"));

@@ -1,4 +1,3 @@
-
 package pe.gym.backend.modulo_entrenamiento.controller;
 
 import jakarta.validation.Valid;
@@ -8,7 +7,10 @@ import pe.gym.backend.modulo_entrenamiento.dto.MedicionRequest;
 import pe.gym.backend.modulo_entrenamiento.dto.RutinaRequest;
 import pe.gym.backend.modulo_entrenamiento.entity.MedicionBiometrica;
 import pe.gym.backend.modulo_entrenamiento.entity.Rutina;
+import pe.gym.backend.modulo_entrenamiento.entity.Ejercicio;
 import pe.gym.backend.modulo_entrenamiento.service.EntrenamientoService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/entrenamiento")
@@ -34,5 +36,10 @@ public class EntrenamientoController {
     public ResponseEntity<String> completarEjercicio(@PathVariable Long id) {
         entrenamientoService.marcarEjercicioCompletado(id);
         return ResponseEntity.ok("Ejercicio marcado como completado");
+    }
+
+    @GetMapping("/ejercicios")
+    public ResponseEntity<List<Ejercicio>> listarEjercicios() {
+        return ResponseEntity.ok(entrenamientoService.listarEjercicios());
     }
 }
