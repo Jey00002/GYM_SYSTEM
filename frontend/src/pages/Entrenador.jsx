@@ -193,50 +193,42 @@ export default function Entrenador() {
             </div>
           </div>
 
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ staggerChildren: 0.1 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-          >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {sociosFiltrados.map(socio => (
-              <motion.div 
+              <div 
                 key={socio.id} 
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                whileHover={{ scale: 1.02, rotateX: 2, rotateY: -2, z: 20 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="bg-[#0a0a0a]/80 backdrop-blur-2xl border border-white/5 hover:border-blue-500/30 rounded-3xl p-6 flex flex-col sm:flex-row gap-6 items-center shadow-2xl hover:shadow-[0_20px_50px_rgba(37,99,235,0.15)] relative overflow-hidden group [perspective:1000px]"
+                className="bg-[#141414] border border-white/5 hover:border-white/20 rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-center transition-colors group"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="w-16 h-16 rounded-full bg-blue-600/10 flex items-center justify-center border border-blue-600/30 flex-shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_15px_rgba(37,99,235,0.2)]">
-                  <span className="text-blue-600 font-black text-xl">{socio.nombres?.charAt(0) || 'S'}</span>
+                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10 flex-shrink-0 group-hover:bg-white/10 transition-colors">
+                  <span className="text-white font-bold text-xl">{socio.nombres?.charAt(0) || 'S'}</span>
                 </div>
-                <div className="flex-1 text-center sm:text-left relative z-10">
-                  <p className="font-black text-xl tracking-tight text-white group-hover:text-blue-400 transition-colors">{socio.nombres} {socio.apellidos}</p>
-                  <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-4">DNI: {socio.dni || 'Sin DNI'}</p>
+                <div className="flex-1 text-center sm:text-left">
+                  <p className="font-semibold text-lg text-white tracking-tight mb-1">{socio.nombres} {socio.apellidos}</p>
+                  <p className="text-gray-500 text-xs font-mono uppercase tracking-wider mb-4">DNI: {socio.dni || 'Sin DNI'}</p>
                   
                   <div className="flex flex-wrap justify-center sm:justify-start gap-3">
                     <button 
                       onClick={() => { setSocioSeleccionado(socio); setModalAbierto('RUTINA'); }}
-                      className="bg-white/5 hover:bg-blue-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:-translate-y-1"
+                      className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors"
                     >
                       <Plus className="w-3 h-3" /> Asignar Rutina
                     </button>
                     <button 
                       onClick={() => { setSocioSeleccionado(socio); setModalAbierto('MEDICION'); }}
-                      className="bg-blue-600/10 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 transition-all duration-300 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:-translate-y-1"
+                      className="bg-blue-600/10 text-blue-500 hover:bg-blue-600/20 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors"
                     >
                       <Activity className="w-3 h-3" /> Medición
                     </button>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
             {sociosFiltrados.length === 0 && (
               <div className="col-span-1 lg:col-span-2 text-center py-12 text-gray-500 bg-[#141414] border border-white/5 rounded-3xl">
                 No se encontraron socios.
               </div>
             )}
-          </motion.div>
+          </div>
         </div>
 
         {/* MODAL RUTINA */}
