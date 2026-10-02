@@ -241,7 +241,7 @@ export default function Landing() {
 
       <header id="inicio" className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden min-h-[100vh] flex items-center">
         <div className="absolute inset-0 z-0">
-          <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop" alt="Gym Hero" className="w-full h-full object-cover kenburns opacity-40 mix-blend-luminosity filter grayscale" />
+          <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070&auto=format&fit=crop" alt="Gym Hero" className="w-full h-full object-cover kenburns opacity-30 mix-blend-overlay" />
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black"></div>
         </div>
@@ -389,7 +389,7 @@ export default function Landing() {
           <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setModalRegistro(false)}></div>
           <motion.div initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }} animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl w-full max-w-lg p-10 relative shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
             {/* Elemento decorativo cinemático */}
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-luminosity filter grayscale pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-15 mix-blend-overlay pointer-events-none"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none"></div>
             
             <button onClick={() => setModalRegistro(false)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center transition z-20 border border-white/10">

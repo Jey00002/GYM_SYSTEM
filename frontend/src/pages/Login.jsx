@@ -78,7 +78,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-6 relative overflow-hidden">
       {/* Fondo Cinemático: Imagen monocromática con viñeta profunda */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-luminosity filter grayscale"></div>
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
       <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black"></div>
       
