@@ -37,10 +37,15 @@ public class PanelSocioController {
     private final PagoRepository pagoRepository;
     private final AccesoRepository accesoRepository;
 
+    private final pe.gym.backend.modulo_finanzas.repository.PlanMembresiaRepository planMembresiaRepository;
+    private final pe.gym.backend.modulo_finanzas.repository.MetodoPagoRepository metodoPagoRepository;
+
     public PanelSocioController(UsuarioRepository usuarioRepository, SocioRepository socioRepository,
                                 MembresiaRepository membresiaRepository, MedicionBiometricaRepository medicionRepository,
                                 RutinaRepository rutinaRepository, RutinaEjercicioRepository rutinaEjercicioRepository,
-                                PagoRepository pagoRepository, AccesoRepository accesoRepository) {
+                                PagoRepository pagoRepository, AccesoRepository accesoRepository,
+                                pe.gym.backend.modulo_finanzas.repository.PlanMembresiaRepository planMembresiaRepository,
+                                pe.gym.backend.modulo_finanzas.repository.MetodoPagoRepository metodoPagoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.socioRepository = socioRepository;
         this.membresiaRepository = membresiaRepository;
@@ -49,8 +54,9 @@ public class PanelSocioController {
         this.rutinaEjercicioRepository = rutinaEjercicioRepository;
         this.pagoRepository = pagoRepository;
         this.accesoRepository = accesoRepository;
+        this.planMembresiaRepository = planMembresiaRepository;
+        this.metodoPagoRepository = metodoPagoRepository;
     }
-
     @GetMapping("/datos")
     public ResponseEntity<Map<String, Object>> datos(Principal principal) {
         Usuario usuario = usuarioRepository.findByCorreo(principal.getName())
@@ -141,5 +147,50 @@ public class PanelSocioController {
         out.put("accesos", accs);
 
         return ResponseEntity.ok(out);
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/pago")
+    public ResponseEntity<?> registrarPago(@org.springframework.web.bind.annotation.RequestBody Map<String, Object> body, Principal principal) {
+        try {
+            Usuario usuario = usuarioRepository.findByCorreo(principal.getName())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            Socio socio = socioRepository.findByUsuarioId(usuario.getId())
+                    .orElseThrow(() -> new RuntimeException("Tu usuario no tiene perfil de socio"));
+
+            Long idPlan = Long.valueOf(body.get("idPlan").toString());
+            String transactionId = body.get("transactionId") != null ? body.get("transactionId").toString() : "txn_" + UUID.randomUUID().toString();
+            if (!transactionId.startsWith("txn_")) {
+                transactionId = "txn_" + transactionId;
+            }
+
+            pe.gym.backend.modulo_finanzas.entity.PlanMembresia plan = planMembresiaRepository.findById(idPlan)
+                    .orElseThrow(() -> new RuntimeException("Plan no encontrado"));
+
+            pe.gym.backend.modulo_finanzas.entity.MetodoPago metodo = metodoPagoRepository.findById(1L)
+                    .orElseThrow(() -> new RuntimeException("Metodo no encontrado"));
+
+            Membresia membresia = new Membresia();
+            membresia.setSocio(socio);
+            membresia.setPlanMembresia(plan);
+            membresia.setFechaInicio(java.time.LocalDate.now());
+            membresia.setFechaVencimiento(java.time.LocalDate.now().plusDays(plan.getDuracionDias()));
+            membresia.setEstado("ACTIVA");
+            membresiaRepository.save(membresia);
+
+            Pago pago = new Pago();
+            pago.setMembresia(membresia);
+            pago.setMetodoPago(metodo);
+            pago.setFechaPago(java.time.LocalDate.now());
+            pago.setMonto(plan.getTarifa());
+            // Setting transaction id if method exists, else skipping. Actually Pago has transactionId we saw in PagoService.
+            // Wait, let's use Reflection to set it just in case or assume it exists since it was in PagoService.
+            // Oh, PagoService used pago.setTransactionId(transactionId);
+            pago.setTransactionId(transactionId);
+            pagoRepository.save(pago);
+
+            return ResponseEntity.ok(Map.of("mensaje", "Pago exitoso"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

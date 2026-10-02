@@ -14,6 +14,7 @@ import pe.gym.backend.modulo_finanzas.repository.SocioRepository;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -50,8 +51,8 @@ public class AccesoService {
         } else {
             // Intentar registrar INGRESO
             
-            // RN-08: Validar membresía vigente
-            Optional<Membresia> membresiaActiva = membresiaRepository.findBySocioIdAndEstado(socio.getId(), "ACTIVA");
+            // RN-08: Validar membresía vigente (puede tener varias por área)
+            List<Membresia> membresiasActivas = membresiaRepository.findBySocioIdAndEstado(socio.getId(), "ACTIVA");
             
             Acceso acceso = new Acceso();
             acceso.setSocio(socio);
@@ -59,7 +60,10 @@ public class AccesoService {
             acceso.setFecha(LocalDate.now());
             acceso.setHoraIngreso(LocalTime.now());
 
-            if (membresiaActiva.isEmpty() || membresiaActiva.get().getFechaVencimiento().isBefore(LocalDate.now())) {
+            boolean tieneAcceso = membresiasActivas.stream()
+                    .anyMatch(m -> !m.getFechaVencimiento().isBefore(LocalDate.now()));
+
+            if (!tieneAcceso) {
                 acceso.setResultado("DENEGADO"); // RN-08
                 // RN-10: Aquí se podría disparar una alerta a recepción
             } else {

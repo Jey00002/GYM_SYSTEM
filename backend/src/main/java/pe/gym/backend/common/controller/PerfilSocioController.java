@@ -47,6 +47,12 @@ public class PerfilSocioController {
         if (body.get("telefono") != null && !body.get("telefono").toString().isBlank()) {
             socio.setTelefono(body.get("telefono").toString());
         }
+        if (body.get("nombres") != null && !body.get("nombres").toString().isBlank()) {
+            socio.setNombres(body.get("nombres").toString());
+        }
+        if (body.get("apellidos") != null && !body.get("apellidos").toString().isBlank()) {
+            socio.setApellidos(body.get("apellidos").toString());
+        }
         if (body.get("fechaNacimiento") != null && !body.get("fechaNacimiento").toString().isBlank()) {
             socio.setFechaNacimiento(LocalDate.parse(body.get("fechaNacimiento").toString()));
         }

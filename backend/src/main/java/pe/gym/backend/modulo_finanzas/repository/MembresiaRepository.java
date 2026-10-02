@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface MembresiaRepository extends JpaRepository<Membresia, Long> {
-    Optional<Membresia> findBySocioIdAndEstado(Long socioId, String estado);
+    List<Membresia> findBySocioIdAndEstado(Long socioId, String estado);
     List<Membresia> findBySocioId(Long socioId);
     List<Membresia> findByFechaVencimientoBeforeAndEstado(LocalDate fecha, String estado);
     List<Membresia> findByFechaVencimientoBetweenAndEstado(LocalDate inicio, LocalDate fin, String estado);

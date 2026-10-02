@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   User, CreditCard, Activity, Calendar, History, LogOut, 
-  Search, Save, Dumbbell, AlertCircle 
+  Search, Save, Dumbbell, AlertCircle, Trophy
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
@@ -50,27 +50,25 @@ export default function Socio() {
 
   const cargarDatos = async () => {
     try {
-      const [perfRes, rutRes, medRes, pagRes, accRes] = await Promise.all([
-        api.get('/panel-socio/perfil'),
-        api.get('/panel-socio/rutina').catch(() => ({ data: null })),
-        api.get('/panel-socio/mediciones').catch(() => ({ data: [] })),
-        api.get('/panel-socio/pagos').catch(() => ({ data: [] })),
-        api.get('/panel-socio/accesos').catch(() => ({ data: [] }))
-      ]);
-
-      setPerfil(perfRes.data);
-      setFormData({
-        dni: perfRes.data.dni || '',
-        nombres: perfRes.data.nombres || '',
-        apellidos: perfRes.data.apellidos || '',
-        telefono: perfRes.data.telefono || '',
-        fechaNacimiento: perfRes.data.fechaNacimiento || '',
-        peso: medRes.data.length > 0 ? medRes.data[0].peso : ''
+      const res = await api.get('/panel-socio/datos');
+      const data = res.data;
+      
+      setPerfil({
+        ...data.socio,
+        membresiaActiva: data.membresia
       });
-      setRutina(rutRes.data);
-      setMediciones([...medRes.data].reverse());
-      setPagos(pagRes.data);
-      setAccesos(accRes.data);
+      setFormData({
+        dni: data.socio.dni || '',
+        nombres: data.socio.nombres || '',
+        apellidos: data.socio.apellidos || '',
+        telefono: data.socio.telefono || '',
+        fechaNacimiento: data.socio.fechaNacimiento || '',
+        peso: data.mediciones?.length > 0 ? data.mediciones[0].peso : ''
+      });
+      setRutina(data.rutina);
+      setMediciones(data.mediciones || []);
+      setPagos(data.pagos || []);
+      setAccesos(data.accesos || []);
     } catch (error) {
       console.error(error);
     } finally {
@@ -126,7 +124,7 @@ export default function Socio() {
   if (cargando) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -136,11 +134,11 @@ export default function Socio() {
       {/* SIDEBAR */}
       <aside className="w-full md:w-64 bg-[#141414] border-r border-white/5 p-6 flex flex-col">
         <div className="text-2xl italic-heavy tracking-tighter mb-10">
-          GYM<span className="text-orange-500">STAR</span>
+          GYM<span className="text-blue-600">STAR</span>
         </div>
         
         <div className="flex items-center gap-3 mb-8 pb-8 border-b border-white/5">
-          <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center text-orange-500 font-bold text-lg border border-orange-500/20">
+          <div className="w-12 h-12 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg border border-blue-600/20">
             {perfil?.nombres ? perfil.nombres.charAt(0) : 'U'}
           </div>
           <div>
@@ -158,7 +156,7 @@ export default function Socio() {
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-bold ${
-                  active ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  active ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Icon className="w-5 h-5" /> {t.label}
@@ -177,13 +175,20 @@ export default function Socio() {
 
       {/* CONTENT */}
       <main className="flex-1 p-6 lg:p-10 overflow-y-auto">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={tab}>
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={tab}
+            initial={{ opacity: 0, y: 15, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -15, filter: 'blur(8px)' }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
           
           {tab === 'membresia' && (
             <div className="max-w-2xl">
               <h2 className="text-3xl italic-heavy mb-8">MI MEMBRESÍA</h2>
               {perfil?.membresiaActiva ? (
-                <div className="bg-gradient-to-br from-orange-600 to-orange-800 rounded-3xl p-8 relative overflow-hidden shadow-2xl">
+                <div className="bg-gradient-to-br from-blue-700 to-blue-900 rounded-3xl p-8 relative overflow-hidden shadow-2xl">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
                   
                   <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
@@ -220,7 +225,13 @@ export default function Socio() {
                 <div className="bg-[#141414] border border-white/5 rounded-3xl p-10 text-center">
                   <AlertCircle className="w-16 h-16 text-gray-500 mx-auto mb-4" />
                   <h3 className="text-2xl font-bold mb-2">Sin Membresía Activa</h3>
-                  <p className="text-gray-400 mb-6">Actualmente no cuentas con un plan activo. Compra un plan en la sección inicial para acceder al gimnasio.</p>
+                  <p className="text-gray-400 mb-6">Actualmente no cuentas con un plan activo. Adquiere uno para poder acceder a nuestras instalaciones.</p>
+                  <a 
+                    href="/#planes"
+                    className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-black px-8 py-3 rounded-xl uppercase tracking-widest text-sm transition-all"
+                  >
+                    Adquirir Membresía
+                  </a>
                 </div>
               )}
             </div>
@@ -233,7 +244,7 @@ export default function Socio() {
                 <div className="bg-[#141414] border border-white/5 rounded-3xl p-8">
                   <div className="flex justify-between items-end mb-6 pb-6 border-b border-white/5">
                     <div>
-                      <h3 className="text-2xl font-bold text-orange-500">{rutina.nombreRutina}</h3>
+                      <h3 className="text-2xl font-bold text-blue-600">{rutina.nombreRutina}</h3>
                       <p className="text-gray-400 text-sm mt-1">Asignada por: {rutina.entrenador?.nombres || 'Entrenador'}</p>
                     </div>
                   </div>
@@ -246,8 +257,8 @@ export default function Socio() {
                           <p className="text-gray-500 text-xs uppercase">{ej.ejercicio?.grupoMuscular}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-black text-2xl text-orange-500">{ej.series} <span className="text-sm text-gray-400 font-normal">series</span></p>
-                          <p className="font-black text-2xl text-orange-500">{ej.repeticiones} <span className="text-sm text-gray-400 font-normal">reps</span></p>
+                          <p className="font-black text-2xl text-blue-600">{ej.series} <span className="text-sm text-gray-400 font-normal">series</span></p>
+                          <p className="font-black text-2xl text-blue-600">{ej.repeticiones} <span className="text-sm text-gray-400 font-normal">reps</span></p>
                         </div>
                       </div>
                     ))}
@@ -280,9 +291,9 @@ export default function Socio() {
                         <YAxis stroke="#666" tick={{fill: '#999', fontSize: 12}} domain={['dataMin - 5', 'dataMax + 5']} />
                         <Tooltip 
                           contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                          itemStyle={{ color: '#f97316' }}
+                          itemStyle={{ color: '#2563eb' }}
                         />
-                        <Line type="monotone" dataKey="peso" stroke="#f97316" strokeWidth={3} dot={{ fill: '#f97316', r: 5 }} activeDot={{ r: 8 }} />
+                        <Line type="monotone" dataKey="peso" stroke="#2563eb" strokeWidth={3} dot={{ fill: '#2563eb', r: 5 }} activeDot={{ r: 8 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
@@ -376,7 +387,7 @@ export default function Socio() {
                           maxLength="8"
                           value={formData.dni} 
                           onChange={e => setFormData({...formData, dni: e.target.value.replace(/\D/g, '')})}
-                          className="flex-1 bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" 
+                          className="flex-1 bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-600 focus:outline-none" 
                           placeholder="Número de DNI"
                         />
                         <button 
@@ -396,7 +407,7 @@ export default function Socio() {
                         type="text" 
                         value={formData.nombres} 
                         onChange={e => setFormData({...formData, nombres: e.target.value})}
-                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" 
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-600 focus:outline-none" 
                       />
                     </div>
                     <div>
@@ -405,7 +416,7 @@ export default function Socio() {
                         type="text" 
                         value={formData.apellidos} 
                         onChange={e => setFormData({...formData, apellidos: e.target.value})}
-                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" 
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-600 focus:outline-none" 
                       />
                     </div>
                     
@@ -416,7 +427,7 @@ export default function Socio() {
                         maxLength="9"
                         value={formData.telefono} 
                         onChange={e => setFormData({...formData, telefono: e.target.value.replace(/\D/g, '')})}
-                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" 
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-600 focus:outline-none" 
                         placeholder="Ej. 987654321"
                       />
                     </div>
@@ -426,7 +437,7 @@ export default function Socio() {
                         type="date" 
                         value={formData.fechaNacimiento} 
                         onChange={e => setFormData({...formData, fechaNacimiento: e.target.value})}
-                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" 
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-600 focus:outline-none" 
                         style={{ colorScheme: 'dark' }}
                       />
                     </div>
@@ -438,7 +449,7 @@ export default function Socio() {
                         step="0.1"
                         value={formData.peso} 
                         onChange={e => setFormData({...formData, peso: e.target.value})}
-                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 focus:outline-none" 
+                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-600 focus:outline-none" 
                       />
                     </div>
                   </div>
@@ -446,7 +457,7 @@ export default function Socio() {
                   <button 
                     type="submit" 
                     disabled={guardando}
-                    className="mt-6 bg-orange-500 hover:bg-orange-600 text-white font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wide transition-all disabled:opacity-50 w-full md:w-auto"
+                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wide transition-all disabled:opacity-50 w-full md:w-auto"
                   >
                     <Save className="w-5 h-5" /> {guardando ? 'Guardando...' : 'Guardar Cambios'}
                   </button>
@@ -456,6 +467,7 @@ export default function Socio() {
           )}
 
         </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

@@ -32,7 +32,7 @@ export default function Entrenador() {
   const cargarDatos = async () => {
     try {
       const [socRes, ejRes] = await Promise.all([
-        api.get('/finanzas/socios').catch(() => ({ data: [] })),
+        api.get('/socios').catch(() => ({ data: [] })),
         api.get('/entrenamiento/ejercicios').catch(() => ({ data: [] }))
       ]);
       setSocios(socRes.data);
@@ -138,7 +138,7 @@ export default function Entrenador() {
   if (cargando) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -147,12 +147,12 @@ export default function Entrenador() {
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans flex flex-col md:flex-row">
       <aside className="w-full md:w-64 bg-[#141414] border-r border-white/5 p-6 flex flex-col">
         <div className="text-2xl italic-heavy tracking-tighter mb-10">
-          GYM<span className="text-orange-500">STAR</span>
+          GYM<span className="text-blue-600">STAR</span>
         </div>
         
         <div className="flex-1">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-4">Entrenador</p>
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500 text-white shadow-lg shadow-orange-500/20 text-sm font-bold">
+          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 text-sm font-bold">
             <Users className="w-5 h-5" /> Gestión de Socios
           </button>
         </div>
@@ -188,7 +188,7 @@ export default function Entrenador() {
                 value={busqueda}
                 onChange={e => setBusqueda(e.target.value)}
                 placeholder="Buscar por DNI o Nombre..."
-                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-blue-600 transition-colors"
               />
             </div>
           </div>
@@ -196,8 +196,8 @@ export default function Entrenador() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {sociosFiltrados.map(socio => (
               <div key={socio.id} className="bg-[#141414] border border-white/5 rounded-3xl p-6 flex flex-col sm:flex-row gap-6 items-center">
-                <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/30 flex-shrink-0">
-                  <span className="text-orange-500 font-black text-xl">{socio.nombres?.charAt(0) || 'S'}</span>
+                <div className="w-16 h-16 rounded-full bg-blue-600/10 flex items-center justify-center border border-blue-600/30 flex-shrink-0">
+                  <span className="text-blue-600 font-black text-xl">{socio.nombres?.charAt(0) || 'S'}</span>
                 </div>
                 <div className="flex-1 text-center sm:text-left">
                   <p className="font-bold text-lg">{socio.nombres} {socio.apellidos}</p>
@@ -212,7 +212,7 @@ export default function Entrenador() {
                     </button>
                     <button 
                       onClick={() => { setSocioSeleccionado(socio); setModalAbierto('MEDICION'); }}
-                      className="bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition"
+                      className="bg-blue-600/10 text-blue-600 hover:bg-blue-600/20 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition"
                     >
                       <Activity className="w-3 h-3" /> Medición
                     </button>
@@ -236,7 +236,7 @@ export default function Entrenador() {
               <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#0a0a0a] rounded-t-3xl">
                 <div>
                   <h3 className="italic-heavy text-2xl">ASIGNAR RUTINA</h3>
-                  <p className="text-orange-500 text-sm font-bold uppercase tracking-wider">{socioSeleccionado.nombres} {socioSeleccionado.apellidos}</p>
+                  <p className="text-blue-600 text-sm font-bold uppercase tracking-wider">{socioSeleccionado.nombres} {socioSeleccionado.apellidos}</p>
                 </div>
                 <button onClick={() => setModalAbierto(null)} className="text-gray-500 hover:text-white transition">Cerrar</button>
               </div>
@@ -245,11 +245,11 @@ export default function Entrenador() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Nombre (Opcional)</label>
-                    <input type="text" value={rutinaForm.nombre} onChange={e => setRutinaForm({...rutinaForm, nombre: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500" placeholder="Ej. Tren Superior" />
+                    <input type="text" value={rutinaForm.nombre} onChange={e => setRutinaForm({...rutinaForm, nombre: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-600" placeholder="Ej. Tren Superior" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Día de Semana</label>
-                    <select value={rutinaForm.diaSemana} onChange={e => setRutinaForm({...rutinaForm, diaSemana: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500">
+                    <select value={rutinaForm.diaSemana} onChange={e => setRutinaForm({...rutinaForm, diaSemana: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-600">
                       {['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'].map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
@@ -257,13 +257,13 @@ export default function Entrenador() {
                 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Descripción</label>
-                  <input type="text" value={rutinaForm.descripcion} onChange={e => setRutinaForm({...rutinaForm, descripcion: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500" placeholder="Ej. Enfocarse en hipertrofia" />
+                  <input type="text" value={rutinaForm.descripcion} onChange={e => setRutinaForm({...rutinaForm, descripcion: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-600" placeholder="Ej. Enfocarse en hipertrofia" />
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center mb-4">
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Ejercicios</label>
-                    <button type="button" onClick={agregarEjercicio} className="text-orange-500 text-sm font-bold flex items-center gap-1 hover:text-orange-400"><Plus className="w-4 h-4" /> Agregar</button>
+                    <button type="button" onClick={agregarEjercicio} className="text-blue-600 text-sm font-bold flex items-center gap-1 hover:text-blue-500"><Plus className="w-4 h-4" /> Agregar</button>
                   </div>
                   
                   <div className="space-y-3">
@@ -289,7 +289,7 @@ export default function Entrenador() {
               
               <div className="p-6 border-t border-white/5 flex gap-3 bg-[#0a0a0a] rounded-b-3xl">
                 <button onClick={() => setModalAbierto(null)} className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition">Cancelar</button>
-                <button onClick={guardarRutina} disabled={guardando} className="flex-1 py-4 bg-orange-500 hover:bg-orange-600 rounded-xl font-black uppercase transition disabled:opacity-50 flex items-center justify-center gap-2">
+                <button onClick={guardarRutina} disabled={guardando} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-black uppercase transition disabled:opacity-50 flex items-center justify-center gap-2">
                   <Save className="w-5 h-5" /> Guardar Rutina
                 </button>
               </div>
@@ -305,8 +305,8 @@ export default function Entrenador() {
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-[#141414] border border-white/10 rounded-3xl w-full max-w-md shadow-2xl">
               <div className="p-6 border-b border-white/5 bg-[#0a0a0a] rounded-t-3xl text-center relative">
                 <button onClick={() => setModalAbierto(null)} className="absolute top-6 right-6 text-gray-500 hover:text-white transition">✕</button>
-                <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Activity className="w-6 h-6 text-orange-500" />
+                <div className="w-12 h-12 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Activity className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="italic-heavy text-2xl">NUEVA MEDICIÓN</h3>
                 <p className="text-gray-400 text-sm">{socioSeleccionado.nombres} {socioSeleccionado.apellidos}</p>
@@ -315,20 +315,20 @@ export default function Entrenador() {
               <form onSubmit={guardarMedicion} className="p-6 space-y-5">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Peso (kg) - Obligatorio</label>
-                  <input type="number" step="0.1" required value={medicionForm.peso} onChange={e => setMedicionForm({...medicionForm, peso: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 text-center text-xl font-bold" placeholder="Ej. 75.5" />
+                  <input type="number" step="0.1" required value={medicionForm.peso} onChange={e => setMedicionForm({...medicionForm, peso: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-600 text-center text-xl font-bold" placeholder="Ej. 75.5" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Talla (m)</label>
-                    <input type="number" step="0.01" required value={medicionForm.talla} onChange={e => setMedicionForm({...medicionForm, talla: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 text-center" placeholder="Ej. 1.75" />
+                    <input type="number" step="0.01" required value={medicionForm.talla} onChange={e => setMedicionForm({...medicionForm, talla: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-600 text-center" placeholder="Ej. 1.75" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Grasa (%)</label>
-                    <input type="number" step="0.1" value={medicionForm.porcentajeGrasa} onChange={e => setMedicionForm({...medicionForm, porcentajeGrasa: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 text-center" placeholder="Opcional" />
+                    <input type="number" step="0.1" value={medicionForm.porcentajeGrasa} onChange={e => setMedicionForm({...medicionForm, porcentajeGrasa: e.target.value})} className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-600 text-center" placeholder="Opcional" />
                   </div>
                 </div>
                 
-                <button type="submit" disabled={guardando} className="w-full mt-4 py-4 bg-orange-500 hover:bg-orange-600 rounded-xl font-black uppercase transition disabled:opacity-50 flex items-center justify-center gap-2">
+                <button type="submit" disabled={guardando} className="w-full mt-4 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-black uppercase transition disabled:opacity-50 flex items-center justify-center gap-2">
                   <Save className="w-5 h-5" /> Registrar Medición
                 </button>
               </form>

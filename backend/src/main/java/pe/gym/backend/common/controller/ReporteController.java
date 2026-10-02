@@ -39,10 +39,15 @@ public class ReporteController {
                 : BigDecimal.valueOf(morosos * 100.0 / total).setScale(1, RoundingMode.HALF_UP);
 
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("ingresos_totales", pagoRepository.ingresosTotales());
-        data.put("socios_activos", activos);
+        data.put("ingresosMensuales", pagoRepository.ingresosTotales());
+        data.put("sociosActivos", activos);
         data.put("morosidad_pct", morosidad);
-        data.put("aforo_actual", accesoService.obtenerAforoActual());
+        data.put("aforoActual", accesoService.obtenerAforoActual());
+        data.put("aforoMaximo", 100);
+        
+        java.time.LocalDate hoy = java.time.LocalDate.now();
+        data.put("proximosVencimientos", membresiaRepository.findByFechaVencimientoBetweenAndEstado(hoy, hoy.plusDays(7), "ACTIVA"));
+        
         return ResponseEntity.ok(data);
     }
 

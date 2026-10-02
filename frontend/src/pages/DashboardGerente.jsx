@@ -8,7 +8,7 @@ import { Users, TrendingUp, AlertTriangle, LogOut, ArrowRight, Activity, DollarS
 import api from '../services/api';
 
 const MESES = { '01':'Ene','02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun','07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic' };
-const COLORES_ESTADO = { ACTIVA: '#22c55e', MOROSO: '#ef4444', VENCIDA: '#ef4444', SUSPENDIDA: '#f97316' };
+const COLORES_ESTADO = { ACTIVA: '#22c55e', MOROSO: '#ef4444', VENCIDA: '#ef4444', SUSPENDIDA: '#2563eb' };
 
 export default function DashboardGerente() {
   const [dashboard, setDashboard] = useState(null);
@@ -36,7 +36,7 @@ export default function DashboardGerente() {
       setMembresias(m.data.map(x => ({
         name: x.estado,
         value: Number(x.total),
-        color: COLORES_ESTADO[x.estado] || '#f97316'
+        color: COLORES_ESTADO[x.estado] || '#2563eb'
       })));
       setVentasDisciplina(vd.data);
       setError(false);
@@ -60,7 +60,7 @@ export default function DashboardGerente() {
   if (cargando) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -69,12 +69,12 @@ export default function DashboardGerente() {
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans flex flex-col md:flex-row">
       <aside className="w-full md:w-64 bg-[#141414] border-r border-white/5 p-6 flex flex-col">
         <div className="text-2xl italic-heavy tracking-tighter mb-10">
-          GYM<span className="text-orange-500">STAR</span>
+          GYM<span className="text-blue-600">STAR</span>
         </div>
         
         <div className="flex-1">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-4">Panel de Control</p>
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500 text-white shadow-lg shadow-orange-500/20 text-sm font-bold">
+          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 text-sm font-bold">
             <Activity className="w-5 h-5" /> Resumen
           </button>
         </div>
@@ -106,8 +106,8 @@ export default function DashboardGerente() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-[#141414] border border-white/5 rounded-3xl p-6">
               <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-orange-500" />
+                <div className="w-12 h-12 rounded-xl bg-blue-600/10 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
               <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Aforo Actual</p>
@@ -152,9 +152,9 @@ export default function DashboardGerente() {
                       <Tooltip 
                         cursor={{fill: 'rgba(255,255,255,0.05)'}}
                         contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                        itemStyle={{ color: '#f97316' }}
+                        itemStyle={{ color: '#2563eb' }}
                       />
-                      <Bar dataKey="ingresos" fill="#f97316" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="ingresos" fill="#2563eb" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -220,7 +220,7 @@ export default function DashboardGerente() {
                       />
                       <Bar dataKey="ingreso_total" radius={[0, 4, 4, 0]}>
                         {ventasDisciplina.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color || '#f97316'} />
+                          <Cell key={`cell-${index}`} fill={entry.color || '#2563eb'} />
                         ))}
                       </Bar>
                     </BarChart>

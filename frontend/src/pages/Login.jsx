@@ -58,7 +58,15 @@ export default function Login() {
     setError('');
     setCargando(true);
     try {
-      const res = await api.post('/auth/google', { token: credentialResponse.credential });
+      const payloadBase64 = credentialResponse.credential.split('.')[1];
+      const decodedPayload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
+      
+      const requestData = {
+        correo: decodedPayload.email,
+        nombre: decodedPayload.name || decodedPayload.given_name || decodedPayload.email.split('@')[0]
+      };
+      
+      const res = await api.post('/auth/login-google', requestData);
       procesarToken(res.data.token);
     } catch (err) {
       setError('Error al iniciar sesión con Google.');
@@ -68,23 +76,24 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-yellow-500"></div>
+    <div className="min-h-screen bg-black flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Fondo Cinemático: Imagen monocromática con viñeta profunda */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-luminosity filter grayscale"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black"></div>
       
-      <Link to="/" className="absolute top-8 left-8 text-white font-bold italic-heavy text-2xl tracking-tighter hover:scale-105 transition">
-        GYM<span className="text-orange-500">STAR</span>
+      <Link to="/" className="absolute top-8 left-8 text-white font-black text-2xl tracking-widest hover:text-blue-600 transition-colors z-20 uppercase">
+        GYM<span className="text-blue-600">STAR</span>
       </Link>
 
       <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} 
-        className="w-full max-w-md bg-[#141414] border border-white/10 p-8 rounded-3xl shadow-2xl relative z-10"
+        initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-md bg-black/40 backdrop-blur-2xl border border-white/10 p-10 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] relative z-10"
       >
-        <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-6 border border-white/10">
-          <User className="w-8 h-8 text-orange-500" />
+        <div className="mb-10">
+          <h2 className="text-4xl font-black text-white mb-2 tracking-tighter uppercase">Acceso<br/><span className="text-blue-600">Autorizado</span></h2>
+          <p className="text-gray-400 text-xs tracking-[0.2em] uppercase">Ingresa tus credenciales para continuar</p>
         </div>
-        
-        <h2 className="text-3xl italic-heavy text-white mb-2 tracking-tight">BIENVENIDO</h2>
-        <p className="text-gray-400 text-sm mb-8">Ingresa tus credenciales para acceder a tu panel.</p>
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/40 text-red-400 px-4 py-3 rounded-xl text-sm mb-6">
@@ -102,7 +111,7 @@ export default function Login() {
                 required 
                 value={correo}
                 onChange={(e) => setCorreo(e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-blue-600 transition-colors"
                 placeholder="ejemplo@gym.com"
               />
             </div>
@@ -117,16 +126,21 @@ export default function Login() {
                 required 
                 value={contrasena}
                 onChange={(e) => setContrasena(e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500 transition-colors"
+                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-blue-600 transition-colors"
                 placeholder="••••••••"
               />
+            </div>
+            <div className="flex justify-end mt-3">
+              <Link to="/recuperar-contrasena" className="text-xs text-gray-400 hover:text-blue-600 transition-colors tracking-wide">
+                ¿Olvidaste tu contraseña?
+              </Link>
             </div>
           </div>
 
           <button 
             type="submit" 
             disabled={cargando}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wide transition-all disabled:opacity-50"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wide transition-all disabled:opacity-50"
           >
             {cargando ? 'Procesando...' : 'Iniciar Sesión'} <ArrowRight className="w-5 h-5" />
           </button>

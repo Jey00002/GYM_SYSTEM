@@ -1,3 +1,4 @@
+
 package pe.gym.backend.modulo_entrenamiento.controller;
 
 import jakarta.validation.Valid;
