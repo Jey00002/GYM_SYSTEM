@@ -83,6 +83,65 @@ public class SocioService {
         return socioRepository.save(socio);
     }
 
+    public List<Map<String, Object>> listarDetallado() {
+        List<Socio> socios = socioRepository.findAll();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Socio s : socios) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", s.getId());
+            m.put("dni", s.getDni() != null ? s.getDni() : "");
+            m.put("nombres", s.getNombres() != null ? s.getNombres() : "");
+            m.put("apellidos", s.getApellidos() != null ? s.getApellidos() : "");
+            m.put("telefono", s.getTelefono() != null ? s.getTelefono() : "");
+            m.put("fechaNacimiento", s.getFechaNacimiento() != null ? s.getFechaNacimiento().toString() : "");
+            
+            String correo = (s.getUsuario() != null && s.getUsuario().getCorreo() != null) ? s.getUsuario().getCorreo() : "";
+            m.put("correo", correo);
+
+            Map<String, Object> uMap = new LinkedHashMap<>();
+            if (s.getUsuario() != null) {
+                uMap.put("id", s.getUsuario().getId());
+                uMap.put("correo", correo);
+            }
+            m.put("usuario", uMap);
+
+            // Membresia info
+            List<Membresia> mems = membresiaRepository.findBySocioId(s.getId());
+            if (!mems.isEmpty()) {
+                Membresia mem = mems.stream()
+                        .max(java.util.Comparator.comparing(Membresia::getFechaVencimiento))
+                        .orElse(null);
+                if (mem != null) {
+                    m.put("estadoMembresia", mem.getEstado());
+                    m.put("fechaVencimiento", mem.getFechaVencimiento() != null ? mem.getFechaVencimiento().toString() : "");
+                    m.put("plan", mem.getPlanMembresia() != null ? mem.getPlanMembresia().getNombrePlan() : "Plan GYM");
+                    m.put("idPlan", mem.getPlanMembresia() != null ? mem.getPlanMembresia().getId() : null);
+                }
+            } else {
+                m.put("estadoMembresia", "SIN_MEMBRESIA");
+                m.put("fechaVencimiento", "-");
+                m.put("plan", "-");
+                m.put("idPlan", null);
+            }
+
+            // Rutina activa info
+            java.util.Optional<Rutina> rOpt = rutinaRepository.findFirstBySocioIdAndEstadoOrderByIdDesc(s.getId(), "ACTIVA");
+            if (rOpt.isPresent()) {
+                Rutina r = rOpt.get();
+                m.put("tieneRutina", true);
+                m.put("rutinaNombre", r.getNombreRutina());
+                m.put("idRutina", r.getId());
+            } else {
+                m.put("tieneRutina", false);
+                m.put("rutinaNombre", null);
+                m.put("idRutina", null);
+            }
+
+            result.add(m);
+        }
+        return result;
+    }
+
     public List<Socio> listarTodos() {
         return socioRepository.findAll();
     }
@@ -129,12 +188,26 @@ public class SocioService {
         if (request.getFechaNacimiento() != null) {
             socio.setFechaNacimiento(request.getFechaNacimiento());
         }
-        if (!socio.getUsuario().getCorreo().equals(request.getCorreo())) {
-            if (usuarioRepository.existsByCorreo(request.getCorreo())) {
-                throw new RuntimeException("El correo ya esta registrado");
+        if (request.getCorreo() != null && !request.getCorreo().isBlank()) {
+            if (socio.getUsuario() != null) {
+                if (!socio.getUsuario().getCorreo().equalsIgnoreCase(request.getCorreo())) {
+                    if (usuarioRepository.existsByCorreo(request.getCorreo())) {
+                        throw new RuntimeException("El correo ya esta registrado por otro usuario");
+                    }
+                    socio.getUsuario().setCorreo(request.getCorreo());
+                    usuarioRepository.save(socio.getUsuario());
+                }
+            } else {
+                Rol rolSocio = rolRepository.findByNombreRol("SOCIO")
+                        .orElseThrow(() -> new RuntimeException("Rol SOCIO no encontrado"));
+                Usuario u = new Usuario();
+                u.setRol(rolSocio);
+                u.setCorreo(request.getCorreo());
+                u.setContrasena(passwordEncoder.encode("123456"));
+                u.setEstado(true);
+                usuarioRepository.save(u);
+                socio.setUsuario(u);
             }
-            socio.getUsuario().setCorreo(request.getCorreo());
-            usuarioRepository.save(socio.getUsuario());
         }
         return socioRepository.save(socio);
     }
@@ -143,15 +216,8 @@ public class SocioService {
     public void eliminarSocio(Long id) {
         Socio socio = socioRepository.findById(id).orElseThrow(() -> new RuntimeException("Socio no encontrado"));
         
-        // Validar: solo se puede eliminar si NO tiene membresia ACTIVA
+        // Eliminar dependencias en cascada para no dejar datos huerfanos
         List<Membresia> membresias = membresiaRepository.findBySocioId(id);
-        for (Membresia mem : membresias) {
-            if ("ACTIVA".equals(mem.getEstado())) {
-                throw new RuntimeException("No se puede eliminar: el socio tiene una membresia ACTIVA vigente. Espera a que venza.");
-            }
-        }
-        
-        // Eliminar dependencias en cascada
         for (Membresia mem : membresias) {
             List<Pago> pagos = pagoRepository.findByMembresiaId(mem.getId());
             for (Pago p : pagos) {
@@ -171,6 +237,8 @@ public class SocioService {
         
         Usuario usuario = socio.getUsuario();
         socioRepository.delete(socio);
-        usuarioRepository.delete(usuario);
+        if (usuario != null) {
+            usuarioRepository.delete(usuario);
+        }
     }
 }

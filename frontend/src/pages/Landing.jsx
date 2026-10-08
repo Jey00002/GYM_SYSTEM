@@ -7,21 +7,96 @@ import api from '../services/api';
 
 import heroImg from '../assets/hero.png';
 
-const FEATURES = {
-  'Mensual': ['Acceso ilimitado a máquinas', 'Vestidores y duchas', 'App GYM STAR'],
-  'Trimestral': ['Acceso ilimitado a máquinas', 'Evaluación inicial', 'Vestidores y duchas', 'App GYM STAR'],
-  'Anual': ['Acceso total', 'Evaluación mensual', 'Congelamiento 30 días', 'Pase invitado mensual', 'App GYM STAR'],
-  'Pack Danza 8 clases': ['8 clases de ritmo/danza', 'Válido por 30 días', 'Reserva desde la app'],
-  'Pack Danza 12 clases': ['12 clases de ritmo/danza', 'Válido por 30 días', 'Reserva prioritaria'],
-  'Mentor 4 sesiones': ['4 sesiones personalizadas', 'Rutina a medida', 'Seguimiento de medidas', 'Válido 30 días'],
-  'Mentor 8 sesiones': ['8 sesiones personalizadas', 'Plan nutricional básico', 'Seguimiento continuo', 'Válido 60 días'],
-  'Full Access Mensual': ['Todo musculación', 'Clases grupales ilimitadas', '1 Evaluación mensual', 'Toallas incluidas'],
-  'Full Access Trimestral': ['Todo musculación', 'Clases ilimitadas', '3 Evaluaciones', 'Toallas y merch exclusivo']
+const DURACIONES = [
+  { id: 'mes', nombre: 'Mensual', etiqueta: 'Por Mes', dias: 30, descripcion: 'Acceso flexible mensual' },
+  { id: 'trimestre', nombre: 'Trimestral', etiqueta: 'Por Trimestre', dias: 90, descripcion: '3 meses con descuento exclusivo' },
+  { id: 'anual', nombre: 'Anual', etiqueta: 'Por Anual', dias: 360, descripcion: '360 días con la máxima economía' }
+];
+
+const NIVELES = [
+  {
+    key: 'basico',
+    nombre: 'Plan Básico',
+    badge: 'Esencial',
+    color: '#2563eb',
+    beneficios: [
+      'Acceso ilimitado a máquinas',
+      'Acceso a vestidores y duchas'
+    ]
+  },
+  {
+    key: 'dorado',
+    nombre: 'Plan Dorado',
+    badge: 'Recomendado',
+    color: '#eab308',
+    beneficios: [
+      'Acceso ilimitado a máquinas',
+      'Acceso a vestidores y duchas',
+      'Evaluación física inicial y mensual',
+      'Rutina digital o física personalizada'
+    ]
+  },
+  {
+    key: 'diamante',
+    nombre: 'Plan Diamante',
+    badge: 'VIP Todo Incluido',
+    color: '#a855f7',
+    beneficios: [
+      'Acceso ilimitado a máquinas',
+      'Acceso a vestidores y duchas',
+      'Evaluación física inicial y mensual',
+      'Rutina digital o física personalizada',
+      'Acceso a talleres de bailes',
+      'Entrenador que te acompaña en toda la sesión de entrenamiento'
+    ]
+  }
+];
+
+const normalizar = (texto = '') => texto
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase();
+
+const obtenerNivel = (nombrePlan = '') => {
+  const nombre = normalizar(nombrePlan);
+  if (nombre.includes('diamante')) return NIVELES.find(n => n.key === 'diamante');
+  if (nombre.includes('dorado')) return NIVELES.find(n => n.key === 'dorado');
+  if (nombre.includes('basico') || /b[^a-z0-9]?sico/.test(nombre)) return NIVELES.find(n => n.key === 'basico');
+  return null;
 };
+
+const coincideDuracion = (plan, duracion) => {
+  const dias = Number(plan.duracionDias);
+  const nombre = normalizar(plan.nombrePlan || '');
+
+  if (duracion.id === 'mes') {
+    return dias === 30 || (nombre.includes('mensual') && !nombre.includes('trimestral'));
+  }
+  if (duracion.id === 'trimestre') {
+    return dias === 90 || nombre.includes('trimestral');
+  }
+  if (duracion.id === 'anual') {
+    return dias === 360 || dias === 365 || nombre.includes('anual');
+  }
+  return dias === duracion.dias;
+};
+
+const PLANES_DEFAULT = [
+  { id: 11, nombrePlan: 'Plan Básico Mensual', duracionDias: 30, tarifa: 80.00 },
+  { id: 12, nombrePlan: 'Plan Dorado Mensual', duracionDias: 30, tarifa: 120.00 },
+  { id: 13, nombrePlan: 'Plan Diamante Mensual', duracionDias: 30, tarifa: 180.00 },
+  { id: 14, nombrePlan: 'Plan Básico Trimestral', duracionDias: 90, tarifa: 210.00 },
+  { id: 15, nombrePlan: 'Plan Dorado Trimestral', duracionDias: 90, tarifa: 320.00 },
+  { id: 16, nombrePlan: 'Plan Diamante Trimestral', duracionDias: 90, tarifa: 480.00 },
+  { id: 17, nombrePlan: 'Plan Básico Anual', duracionDias: 360, tarifa: 720.00 },
+  { id: 18, nombrePlan: 'Plan Dorado Anual', duracionDias: 360, tarifa: 1100.00 },
+  { id: 19, nombrePlan: 'Plan Diamante Anual', duracionDias: 360, tarifa: 1650.00 }
+];
 
 export default function Landing() {
   const [planes, setPlanes] = useState([]);
-  const [disciplinaActiva, setDisciplinaActiva] = useState('Maquinas');
+  const [loadingPlanes, setLoadingPlanes] = useState(true);
+  const [filtroPeriodo, setFiltroPeriodo] = useState('TODOS'); // 'TODOS' | 'mes' | 'trimestre' | 'anual'
   const [modalRegistro, setModalRegistro] = useState(false);
   const [planPago, setPlanPago] = useState(null);
   const [paso, setPaso] = useState('');
@@ -37,11 +112,14 @@ export default function Landing() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setLoadingPlanes(true);
     api.get('/planes').then(r => {
       setPlanes(r.data);
-      const discs = Array.from(new Set(r.data.filter(p => p.disciplina).map(p => p.disciplina.nombre)));
-      if (discs.length > 0 && !discs.includes('Maquinas')) setDisciplinaActiva(discs[0]);
-    }).catch(e => console.error("Error cargando planes"));
+    }).catch(e => {
+      console.error("Error cargando planes", e);
+    }).finally(() => {
+      setLoadingPlanes(false);
+    });
 
     const pendiente = localStorage.getItem('planSeleccionado');
     if (pendiente && token) {
@@ -67,9 +145,15 @@ export default function Landing() {
       const payloadBase64 = credentialResponse.credential.split('.')[1];
       const decodedPayload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
       
+      const email = decodedPayload.email;
+      if (!email || !email.toLowerCase().endsWith('@gmail.com')) {
+        setRegError('Solo se permiten cuentas con el dominio @gmail.com.');
+        return;
+      }
+      
       const requestData = {
-        correo: decodedPayload.email,
-        nombre: decodedPayload.name || decodedPayload.given_name || decodedPayload.email.split('@')[0]
+        correo: email.trim().toLowerCase(),
+        nombre: decodedPayload.name || decodedPayload.given_name || email.split('@')[0]
       };
       
       const res = await api.post('/auth/login-google', requestData);
@@ -157,8 +241,6 @@ export default function Landing() {
     if (rol === 'ENTRENADOR') return '/entrenador';
     return '/socio';
   };
-
-  const disciplinasUnicas = Array.from(new Set(planes.filter(p => p.disciplina).map(p => p.disciplina.nombre)));
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-blue-600/30 font-sans">
@@ -272,93 +354,175 @@ export default function Landing() {
 
       <section id="planes" className="py-24 relative bg-[#0a0a0a]">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <motion.div {...anim()} className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-blue-600 font-bold tracking-[0.2em] text-sm uppercase">ELIGE TU CAMINO</span>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter mt-2 mb-4">MEMBRESÍAS <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-yellow-500">POR DISCIPLINA</span></h2>
-            <p className="text-gray-400">Selecciona tu disciplina favorita y descubre los planes que tenemos para ti. Sin cargos ocultos.</p>
+          <motion.div {...anim()} className="text-center max-w-3xl mx-auto mb-12">
+            <span className="text-blue-500 font-bold tracking-[0.25em] text-xs uppercase">ELIGE TU MEMBRESÍA</span>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter mt-2 mb-4">
+              PLANES <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-yellow-400 to-purple-400">EXCLUSIVOS</span>
+            </h2>
+            <p className="text-gray-400 text-sm md:text-base">
+              Solo 3 planes diseñados a tu medida: Básico, Dorado y Diamante. Agrupados por mes, trimestre y anual.
+            </p>
           </motion.div>
-          
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {disciplinasUnicas.map(dName => {
-              const disc = planes.find(p => p.disciplina?.nombre === dName)?.disciplina;
-              if(!disc) return null;
-              const isActive = disciplinaActiva === disc.nombre;
-              return (
-                <button
-                  key={disc.id}
-                  onClick={() => setDisciplinaActiva(disc.nombre)}
-                  className={`px-6 py-3 rounded-xl font-bold uppercase text-sm transition-all ${isActive ? 'scale-105 shadow-lg' : 'opacity-70 hover:opacity-100'}`}
-                  style={{ 
-                    backgroundColor: isActive ? disc.color : 'rgba(255,255,255,0.1)',
-                    color: isActive ? '#000' : '#fff'
-                  }}
-                >
-                  {disc.nombre}
-                </button>
-              )
-            })}
-          </div>
 
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto items-center">
-            <AnimatePresence mode="popLayout">
-              {planes.filter(p => p.disciplina?.nombre === (disciplinaActiva || 'Maquinas')).map((plan, i) => {
-                const discColor = plan.disciplina?.color || '#2563eb';
-                const destacado = plan.disciplina?.nombre === 'Full Access' || plan.nombrePlan.includes('Trimestral');
-                const isFullAccess = plan.disciplina?.nombre === 'Full Access';
-                const feats = FEATURES[plan.nombrePlan] || ['Acceso total a instalaciones', 'App GYM STAR'];
-                
+          {/* Selector de periodo: Todos, Por Mes, Por Trimestre, Por Anual */}
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-16">
+            <button
+              onClick={() => setFiltroPeriodo('TODOS')}
+              className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                filtroPeriodo === 'TODOS'
+                  ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105'
+                  : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10'
+              }`}
+            >
+              ✨ Todos los Periodos
+            </button>
+            {DURACIONES.map(d => (
+              <button
+                key={d.id}
+                onClick={() => setFiltroPeriodo(d.id)}
+                className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                  filtroPeriodo === d.id
+                    ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105'
+                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10'
+                }`}
+              >
+                {d.etiqueta}
+              </button>
+            ))}
+          </div>
+          
+          {loadingPlanes ? (
+            <div className="py-16 text-center text-gray-400">
+              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-sm font-semibold tracking-wide">Cargando planes de membresía...</p>
+            </div>
+          ) : (
+            <div className="space-y-24">
+              {(filtroPeriodo === 'TODOS' ? DURACIONES : DURACIONES.filter(d => d.id === filtroPeriodo)).map((duracion, durIdx) => {
+                const listaPlanes = planes.length > 0 ? planes : PLANES_DEFAULT;
+                const planesDeDuracion = listaPlanes
+                  .filter(plan => coincideDuracion(plan, duracion))
+                  .map(plan => ({ ...plan, nivel: obtenerNivel(plan.nombrePlan) }))
+                  .filter(plan => plan.nivel)
+                  .filter((plan, index, self) => index === self.findIndex(p => p.nivel.key === plan.nivel.key))
+                  .sort((a, b) => {
+                    const orden = { basico: 1, dorado: 2, diamante: 3 };
+                    return (orden[a.nivel.key] || 99) - (orden[b.nivel.key] || 99);
+                  });
+
                 return (
-                  <motion.div
-                    layout
-                    key={plan.id}
-                    initial={{ opacity: 0, scale: 0.8, y: 30, filter: 'blur(10px)' }}
-                    animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, scale: 0.8, y: -30, filter: 'blur(10px)' }}
-                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: i * 0.1 }}
-                    className={`relative rounded-[2rem] p-[1px] group ${destacado ? 'lg:scale-105 z-10' : 'z-0'}`}
-                    style={{ background: destacado ? `linear-gradient(135deg, ${discColor}, transparent 80%)` : 'rgba(255,255,255,0.05)' }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2rem]"></div>
-                    <div className="rounded-[calc(2rem-1px)] p-6 h-full flex flex-col bg-[#0a0a0a]/90 backdrop-blur-xl relative z-10 border border-white/5 shadow-2xl">
-                      {isFullAccess && (
-                        <div className="flex items-center gap-2 mb-3">
-                          <Trophy className="w-4 h-4" style={{ color: discColor }} />
-                          <span style={{ color: discColor }} className="text-[10px] font-black uppercase tracking-[0.3em]">Premium</span>
+                  <div key={duracion.id} className="relative">
+                    <div className="text-center mb-10">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 text-[11px] font-black uppercase tracking-widest mb-2">
+                        {duracion.id === 'mes' ? '1. Planes por Mes' : duracion.id === 'trimestre' ? '2. Planes por Trimestre' : '3. Planes por Anual'}
+                      </div>
+                      <h3 className="text-2xl md:text-3xl font-black tracking-tight text-white">{duracion.etiqueta}</h3>
+                      <p className="text-gray-400 text-xs md:text-sm mt-1">{duracion.descripcion} · {duracion.dias} días de membresía</p>
+                    </div>
+
+                    <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto items-stretch">
+                      <AnimatePresence mode="popLayout">
+                        {planesDeDuracion.map((plan, i) => {
+                          const esDiamante = plan.nivel.key === 'diamante';
+                          const esDorado = plan.nivel.key === 'dorado';
+                          const discColor = plan.nivel.color;
+
+                          return (
+                            <motion.div
+                              layout
+                              key={plan.id || `${plan.nivel.key}-${duracion.id}`}
+                              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.9, y: -30 }}
+                              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 }}
+                              className={`relative rounded-[2rem] p-[1px] group ${esDiamante ? 'lg:scale-105 z-10' : 'z-0'}`}
+                              style={{ 
+                                background: esDiamante 
+                                  ? `linear-gradient(135deg, ${discColor}, rgba(168, 85, 247, 0.3) 50%, transparent 80%)` 
+                                  : esDorado 
+                                  ? `linear-gradient(135deg, ${discColor}, transparent 80%)` 
+                                  : 'rgba(255,255,255,0.08)' 
+                              }}
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2rem] pointer-events-none"></div>
+                              <div className="rounded-[calc(2rem-1px)] p-7 h-full flex flex-col bg-[#0d0d0d]/95 backdrop-blur-xl relative z-10 border border-white/5 shadow-2xl">
+                                
+                                <div className="flex items-center justify-between gap-2 mb-3">
+                                  <span 
+                                    className="text-[10px] font-black uppercase tracking-[0.25em] px-2.5 py-1 rounded-full border"
+                                    style={{ 
+                                      color: discColor, 
+                                      borderColor: `${discColor}40`,
+                                      backgroundColor: `${discColor}15`
+                                    }}
+                                  >
+                                    {plan.nivel.badge}
+                                  </span>
+                                  {esDiamante && (
+                                    <div className="flex items-center gap-1" style={{ color: discColor }}>
+                                      <Trophy className="w-4 h-4" />
+                                      <span className="text-[10px] font-black uppercase tracking-wider">Top Tier</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <p className="text-white font-black text-2xl tracking-tight">{plan.nivel.nombre}</p>
+                                
+                                <div className="mt-4 mb-6 pb-6 border-b border-white/10">
+                                  <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest block">Inversión Total</span>
+                                  <div className="flex items-baseline gap-1 mt-1">
+                                    <span className="text-lg font-bold text-gray-400">S/</span>
+                                    <p className="text-4xl font-black text-white tracking-tighter">
+                                      {Number(plan.tarifa)}
+                                    </p>
+                                    <span className="text-gray-500 text-xs font-medium ml-1">/{duracion.etiqueta.toLowerCase()}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex-1">
+                                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">Beneficios incluidos:</p>
+                                  <ul className="space-y-3">
+                                    {plan.nivel.beneficios.map((f, j) => (
+                                      <li key={j} className="flex items-start gap-2.5 text-sm">
+                                        <div 
+                                          className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                                          style={{ backgroundColor: `${discColor}20`, color: discColor }}
+                                        >
+                                          <Check className="w-3 h-3" strokeWidth={3} />
+                                        </div>
+                                        <span className="text-gray-300 text-xs font-medium leading-relaxed">{f}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+
+                                <button
+                                  onClick={() => abrirPago(plan)}
+                                  className="mt-8 w-full py-3.5 rounded-xl font-black uppercase tracking-[0.12em] text-xs transition-all duration-300 hover:shadow-[0_0_25px_rgba(37,99,235,0.35)] hover:-translate-y-0.5"
+                                  style={{
+                                    backgroundColor: esDiamante ? discColor : esDorado ? '#eab308' : '#2563eb',
+                                    color: esDorado ? '#000000' : '#ffffff',
+                                    fontWeight: 900
+                                  }}
+                                >
+                                  Adquirir {plan.nivel.nombre}
+                                </button>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                      {planesDeDuracion.length === 0 && (
+                        <div className="col-span-full py-12 text-center text-gray-500">
+                          No hay planes disponibles para esta duración en este momento.
                         </div>
                       )}
-                      <p className="text-white font-black text-xl tracking-tight">{plan.nombrePlan}</p>
-                      <div className="mt-3 mb-6">
-                        <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Inversión</span>
-                        <p className="text-4xl font-black text-white mt-1 tracking-tighter">
-                          S/ {Number(plan.tarifa)}
-                        </p>
-                        <span className="text-gray-500 text-xs font-medium">/{plan.duracionDias} días</span>
-                      </div>
-                      <ul className="space-y-3 flex-1">
-                        {feats.map((f, j) => (
-                          <li key={j} className="flex items-start gap-2 text-sm">
-                            <Check className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: destacado ? discColor : '#374151' }} />
-                            <span className="text-gray-300 text-xs font-medium leading-relaxed">{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <button
-                        onClick={() => abrirPago(plan)}
-                        className={`mt-6 w-full py-3 rounded-xl font-black uppercase tracking-[0.1em] text-xs transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,99,235,0.3)] hover:-translate-y-1`}
-                        style={{ 
-                          backgroundColor: destacado ? discColor : 'rgba(255,255,255,0.05)',
-                          color: destacado ? '#ffffff' : '#e5e7eb',
-                          border: destacado ? 'none' : '1px solid rgba(255,255,255,0.1)'
-                        }}
-                      >
-                        {destacado ? 'Seleccionar Plan' : 'Elegir Plan'}
-                      </button>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+                  </div>
                 );
               })}
-            </AnimatePresence>
-          </motion.div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -459,7 +623,19 @@ export default function Landing() {
                 />
               </div>
               
-              <p className="text-center text-xs text-gray-500 mt-6 tracking-widest uppercase font-bold">¿Ya eres miembro? <Link to="/login" className="text-white hover:text-blue-600 transition">Inicia Sesión</Link></p>
+              <p className="text-center text-xs text-gray-500 mt-6 tracking-widest uppercase font-bold">
+                ¿Ya eres miembro? <Link to="/login" className="text-white hover:text-blue-600 transition">Inicia Sesión</Link>
+              </p>
+
+              <div className="mt-4 pt-4 border-t border-white/10 text-center">
+                <Link 
+                  to="/login?modo=registro" 
+                  onClick={() => setModalRegistro(false)} 
+                  className="text-xs text-blue-400 hover:text-blue-300 font-bold uppercase tracking-wider transition inline-block"
+                >
+                  ¿No tienes cuenta? Crear con correo Gmail
+                </Link>
+              </div>
             </div>
           </motion.div>
         </div>

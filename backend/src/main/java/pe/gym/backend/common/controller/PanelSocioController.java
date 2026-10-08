@@ -98,19 +98,51 @@ public class PanelSocioController {
         }
         out.put("mediciones", meds);
 
-        Optional<Rutina> rutina = rutinaRepository.findBySocioIdAndEstado(socio.getId(), "ACTIVA");
+        Optional<Rutina> rutina = rutinaRepository.findFirstBySocioIdAndEstadoOrderByIdDesc(socio.getId(), "ACTIVA");
         if (rutina.isPresent()) {
             Rutina r = rutina.get();
             Map<String, Object> rm = new LinkedHashMap<>();
+            rm.put("id", r.getId());
             rm.put("nombre", r.getNombreRutina());
+            rm.put("nombreRutina", r.getNombreRutina());
+            rm.put("fechaAsignacion", r.getFechaAsignacion() != null ? r.getFechaAsignacion().toString() : "");
+            
+            if (r.getEntrenador() != null) {
+                Map<String, Object> ent = new LinkedHashMap<>();
+                ent.put("id", r.getEntrenador().getId());
+                String nomEnt = (r.getEntrenador().getNombres() != null ? r.getEntrenador().getNombres() : "Entrenador");
+                if (r.getEntrenador().getApellidos() != null) {
+                    nomEnt += " " + r.getEntrenador().getApellidos();
+                }
+                ent.put("nombres", nomEnt);
+                ent.put("especialidad", r.getEntrenador().getEspecialidad() != null ? r.getEntrenador().getEspecialidad() : "Instructor General");
+                rm.put("entrenador", ent);
+            }
+
             List<Map<String, Object>> ejs = new ArrayList<>();
             for (RutinaEjercicio re : rutinaEjercicioRepository.findByRutinaId(r.getId())) {
                 Map<String, Object> ej = new LinkedHashMap<>();
                 ej.put("id", re.getId());
-                ej.put("nombre", re.getEjercicio().getNombreEjercicio());
                 ej.put("series", re.getSeries());
                 ej.put("repeticiones", re.getRepeticiones());
                 ej.put("completado", re.getCompletado());
+
+                pe.gym.backend.modulo_entrenamiento.entity.Ejercicio ejEntity = re.getEjercicio();
+                if (ejEntity != null) {
+                    ej.put("nombre", ejEntity.getNombreEjercicio());
+                    ej.put("nombreEjercicio", ejEntity.getNombreEjercicio());
+                    ej.put("descripcion", ejEntity.getDescripcion() != null ? ejEntity.getDescripcion() : "");
+                    ej.put("grupoMuscular", ejEntity.getGrupoMuscular() != null ? ejEntity.getGrupoMuscular() : "");
+                    ej.put("urlGif", ejEntity.getUrlGif() != null ? ejEntity.getUrlGif() : "");
+
+                    Map<String, Object> ejSubMap = new LinkedHashMap<>();
+                    ejSubMap.put("id", ejEntity.getId());
+                    ejSubMap.put("nombreEjercicio", ejEntity.getNombreEjercicio());
+                    ejSubMap.put("descripcion", ejEntity.getDescripcion() != null ? ejEntity.getDescripcion() : "");
+                    ejSubMap.put("grupoMuscular", ejEntity.getGrupoMuscular() != null ? ejEntity.getGrupoMuscular() : "");
+                    ejSubMap.put("urlGif", ejEntity.getUrlGif() != null ? ejEntity.getUrlGif() : "");
+                    ej.put("ejercicio", ejSubMap);
+                }
                 ejs.add(ej);
             }
             rm.put("ejercicios", ejs);

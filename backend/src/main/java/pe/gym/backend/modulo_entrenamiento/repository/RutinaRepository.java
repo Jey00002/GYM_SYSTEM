@@ -10,6 +10,9 @@ import java.util.Optional;
 @Repository
 public interface RutinaRepository extends JpaRepository<Rutina, Long> {
     Optional<Rutina> findBySocioIdAndEstado(Long socioId, String estado);
+    Optional<Rutina> findFirstBySocioIdAndEstadoOrderByIdDesc(Long socioId, String estado);
+    List<Rutina> findAllBySocioIdAndEstado(Long socioId, String estado);
     List<Rutina> findBySocioId(Long socioId);
+    List<Rutina> findBySocioIdOrderByIdDesc(Long socioId);
     void deleteBySocioId(Long socioId);
 }

@@ -42,4 +42,34 @@ public class EntrenamientoController {
     public ResponseEntity<List<Ejercicio>> listarEjercicios() {
         return ResponseEntity.ok(entrenamientoService.listarEjercicios());
     }
+
+    @PostMapping("/ejercicios")
+    public ResponseEntity<Ejercicio> crearEjercicio(@RequestBody Ejercicio ejercicio) {
+        return ResponseEntity.ok(entrenamientoService.agregarEjercicio(ejercicio));
+    }
+
+    @GetMapping("/perfil-entrenador")
+    public ResponseEntity<java.util.Map<String, Object>> perfilEntrenador(java.security.Principal principal) {
+        String correo = principal != null ? principal.getName() : null;
+        return ResponseEntity.ok(entrenamientoService.obtenerPerfilEntrenador(correo));
+    }
+
+    @GetMapping("/socio/{socioId}/rutina-activa")
+    public ResponseEntity<?> obtenerRutinaActiva(@PathVariable Long socioId) {
+        java.util.Map<String, Object> rutina = entrenamientoService.obtenerRutinaActivaSocio(socioId);
+        if (rutina == null) {
+            return ResponseEntity.ok(java.util.Map.of("mensaje", "Sin rutina activa"));
+        }
+        return ResponseEntity.ok(rutina);
+    }
+
+    @GetMapping("/socio/{socioId}/historial-rutinas")
+    public ResponseEntity<java.util.List<java.util.Map<String, Object>>> historialRutinas(@PathVariable Long socioId) {
+        return ResponseEntity.ok(entrenamientoService.obtenerHistorialRutinas(socioId));
+    }
+
+    @GetMapping("/socio/{socioId}/mediciones")
+    public ResponseEntity<List<MedicionBiometrica>> listarMedicionesSocio(@PathVariable Long socioId) {
+        return ResponseEntity.ok(entrenamientoService.obtenerMedicionesSocio(socioId));
+    }
 }

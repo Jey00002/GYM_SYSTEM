@@ -38,7 +38,9 @@ public class PagoController {
             Long idSocio = Long.valueOf(body.get("idSocio").toString());
             Long idPlan = Long.valueOf(body.get("idPlan").toString());
             Long idMetodo = Long.valueOf(body.get("idMetodoPago").toString());
-            String transactionId = body.get("transactionId").toString();
+            String transactionId = (body.get("transactionId") != null && !body.get("transactionId").toString().isBlank())
+                    ? body.get("transactionId").toString()
+                    : "txn_rec_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
             
             pagoService.registrarPagoSeguro(idSocio, idPlan, idMetodo, transactionId);
             return ResponseEntity.ok(Map.of("mensaje", "Pago confirmado y membresía activada"));

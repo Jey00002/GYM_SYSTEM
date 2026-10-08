@@ -81,11 +81,17 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void sembrarDisciplinas() {
-        if (disciplinaRepository.count() == 0) {
-            crearDisciplina("Maquinas", "sala de musculación y cardio", "#f97316");
-            crearDisciplina("Danza", "zumba, salsa, ritmos urbanos", "#ec4899");
-            crearDisciplina("Clases con Mentor", "entrenamiento personal / small group", "#22c55e");
-            crearDisciplina("Full Access", "todo incluido, plan premium", "#eab308");
+        asegurarDisciplina("Maquinas", "sala de musculación y cardio", "#f97316");
+        asegurarDisciplina("Danza", "zumba, salsa, ritmos urbanos", "#ec4899");
+        asegurarDisciplina("Clases con Mentor", "entrenamiento personal / small group", "#22c55e");
+        asegurarDisciplina("Full Access", "todo incluido, plan premium", "#eab308");
+    }
+
+    private void asegurarDisciplina(String nombre, String descripcion, String color) {
+        boolean existe = disciplinaRepository.findAll().stream()
+                .anyMatch(d -> d.getNombre().equalsIgnoreCase(nombre));
+        if (!existe) {
+            crearDisciplina(nombre, descripcion, color);
         }
     }
 
@@ -98,35 +104,43 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void sembrarPlanes() {
-        if (planRepository.count() == 0) {
-            Disciplina maquinas = disciplinaRepository.findAll().stream().filter(d -> d.getNombre().equals("Maquinas")).findFirst().orElse(null);
-            Disciplina danza = disciplinaRepository.findAll().stream().filter(d -> d.getNombre().equals("Danza")).findFirst().orElse(null);
-            Disciplina mentor = disciplinaRepository.findAll().stream().filter(d -> d.getNombre().equals("Clases con Mentor")).findFirst().orElse(null);
-            Disciplina full = disciplinaRepository.findAll().stream().filter(d -> d.getNombre().equals("Full Access")).findFirst().orElse(null);
+        Disciplina maquinas = disciplinaRepository.findAll().stream().filter(d -> d.getNombre().equals("Maquinas")).findFirst().orElse(null);
+        Disciplina full = disciplinaRepository.findAll().stream().filter(d -> d.getNombre().equals("Full Access")).findFirst().orElse(null);
 
-            crearPlan("Mensual", 30, "80.00", maquinas);
-            crearPlan("Trimestral", 90, "210.00", maquinas);
-            crearPlan("Anual", 360, "720.00", maquinas);
-            
-            crearPlan("Pack Danza 8 clases", 30, "60.00", danza);
-            crearPlan("Pack Danza 12 clases", 30, "80.00", danza);
-            
-            crearPlan("Mentor 4 sesiones", 30, "120.00", mentor);
-            crearPlan("Mentor 8 sesiones", 60, "220.00", mentor);
-            
-            crearPlan("Full Access Mensual", 30, "120.00", full);
-            crearPlan("Full Access Trimestral", 90, "320.00", full);
+        List<PlanMembresia> existentes = planRepository.findAll();
+        List<String[]> planesDeseados = List.of(
+                new String[]{"Plan Básico Mensual", "30", "80.00", "basico"},
+                new String[]{"Plan Dorado Mensual", "30", "120.00", "dorado"},
+                new String[]{"Plan Diamante Mensual", "30", "180.00", "diamante"},
+                new String[]{"Plan Básico Trimestral", "90", "210.00", "basico"},
+                new String[]{"Plan Dorado Trimestral", "90", "320.00", "dorado"},
+                new String[]{"Plan Diamante Trimestral", "90", "480.00", "diamante"},
+                new String[]{"Plan Básico Anual", "360", "720.00", "basico"},
+                new String[]{"Plan Dorado Anual", "360", "1100.00", "dorado"},
+                new String[]{"Plan Diamante Anual", "360", "1650.00", "diamante"}
+        );
+
+        for (PlanMembresia plan : existentes) {
+            plan.setEstado(false);
         }
-    }
+        planRepository.saveAll(existentes);
 
-    private void crearPlan(String nombre, int dias, String tarifa, Disciplina disciplina) {
-        PlanMembresia p = new PlanMembresia();
-        p.setNombrePlan(nombre);
-        p.setDuracionDias(dias);
-        p.setTarifa(new BigDecimal(tarifa));
-        p.setEstado(true);
-        p.setDisciplina(disciplina);
-        planRepository.save(p);
+        for (String[] datos : planesDeseados) {
+            String nombre = datos[0];
+            int dias = Integer.parseInt(datos[1]);
+            String tarifa = datos[2];
+            Disciplina disciplina = datos[3].equals("diamante") ? full : maquinas;
+            PlanMembresia plan = existentes.stream()
+                    .filter(p -> p.getNombrePlan().equalsIgnoreCase(nombre))
+                    .findFirst()
+                    .orElseGet(PlanMembresia::new);
+            plan.setNombrePlan(nombre);
+            plan.setDuracionDias(dias);
+            plan.setTarifa(new BigDecimal(tarifa));
+            plan.setEstado(true);
+            plan.setDisciplina(disciplina);
+            planRepository.save(plan);
+        }
     }
 
     private void sembrarMetodosPago() {
@@ -150,15 +164,24 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void sembrarEjercicios() {
-        if (ejercicioRepository.count() == 0) {
-            String[][] datos = {
-                {"Sentadilla", "Flexion de rodillas con carga", "Piernas"},
-                {"Press de Banca", "Empuje horizontal de pecho", "Pecho"},
-                {"Peso Muerto", "Levantamiento desde el suelo", "Espalda"},
-                {"Dominadas", "Traccion en barra fija", "Espalda"},
-                {"Press Militar", "Empuje vertical de hombros", "Hombros"}
-            };
-            for (String[] d : datos) {
+        String[][] datos = {
+            {"Sentadilla", "Flexión profunda de rodillas con barra para cuádriceps y glúteos", "Piernas"},
+            {"Press de Banca", "Empuje horizontal con barra para pectoral mayor y tríceps", "Pecho"},
+            {"Peso Muerto", "Levantamiento desde el suelo enfocado en cadena posterior y espalda baja", "Espalda"},
+            {"Dominadas", "Tracción en barra fija para dorsal ancho y bíceps", "Espalda"},
+            {"Press Militar", "Empuje vertical con barra o mancuernas para deltoides", "Hombros"},
+            {"Curl de Bíceps", "Flexión de codos con barra o mancuernas para bíceps braquial", "Brazos"},
+            {"Extensión de Tríceps", "Extensión de codo en polea alta con cuerda", "Brazos"},
+            {"Elevaciones Laterales", "Abducción de hombros con mancuernas para deltoides lateral", "Hombros"},
+            {"Prensa de Piernas", "Empuje de carga inclinada en máquina para cuádriceps y glúteos", "Piernas"},
+            {"Remo con Barra", "Tracción inclinada hacia el abdomen para espalda media y dorsales", "Espalda"},
+            {"Aperturas con Mancuernas", "Apertura en banco plano para estiramiento y trabajo de pecho", "Pecho"},
+            {"Plancha Abdominal", "Isometría en posición prona para estabilidad del core y abdomen", "Abdomen"}
+        };
+        for (String[] d : datos) {
+            boolean existe = ejercicioRepository.findAll().stream()
+                    .anyMatch(e -> e.getNombreEjercicio().equalsIgnoreCase(d[0]));
+            if (!existe) {
                 Ejercicio e = new Ejercicio();
                 e.setNombreEjercicio(d[0]);
                 e.setDescripcion(d[1]);
@@ -169,43 +192,55 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void sembrarUsuariosYPerfiles() {
-        if (usuarioRepository.count() > 0) return;
-
         String pass = passwordEncoder.encode("123456");
 
-        Usuario uSocio = crearUsuario("SOCIO", "socio@gym.com", pass);
-        Usuario uEnt = crearUsuario("ENTRENADOR", "entrenador@gym.com", pass);
-        crearUsuario("GERENTE", "gerente@gym.com", pass);
-        crearUsuario("RECEPCIONISTA", "recepcion@gym.com", pass);
-        crearUsuario("ADMIN", "admin@gym.com", pass);
+        // Asegurar que cada usuario clave exista
+        Usuario uSocio = asegurarUsuario("SOCIO", "socio@gym.com", pass);
+        Usuario uEnt = asegurarUsuario("ENTRENADOR", "entrenador@gym.com", pass);
+        asegurarUsuario("GERENTE", "gerente@gym.com", pass);
+        asegurarUsuario("RECEPCIONISTA", "recepcion@gym.com", pass);
+        asegurarUsuario("ADMIN", "admin@gym.com", pass);
 
-        Socio s = new Socio();
-        s.setUsuario(uSocio);
-        s.setDni("72345678");
-        s.setNombres("Carlos");
-        s.setApellidos("Rodriguez");
-        s.setTelefono("987654321");
-        s.setFechaNacimiento(LocalDate.of(1998, 5, 14));
-        socioRepository.save(s);
+        if (socioRepository.findByUsuarioId(uSocio.getId()).isEmpty()) {
+            Socio s = new Socio();
+            s.setUsuario(uSocio);
+            s.setDni("72345678");
+            s.setNombres("Carlos");
+            s.setApellidos("Rodriguez");
+            s.setTelefono("987654321");
+            s.setFechaNacimiento(LocalDate.of(1998, 5, 14));
+            socioRepository.save(s);
+        }
 
-        Entrenador e = new Entrenador();
-        e.setUsuario(uEnt);
-        e.setDni("71234567");
-        e.setNombres("Miguel");
-        e.setApellidos("Torres");
-        e.setEspecialidad("Hipertrofia y fuerza");
-        entrenadorRepository.save(e);
+        if (entrenadorRepository.findByUsuarioId(uEnt.getId()).isEmpty()) {
+            Entrenador e = new Entrenador();
+            e.setUsuario(uEnt);
+            e.setDni("71234567");
+            e.setNombres("Miguel");
+            e.setApellidos("Torres");
+            e.setEspecialidad("Hipertrofia y fuerza");
+            entrenadorRepository.save(e);
+        }
 
         if (membresiaRepository.count() == 0) {
-            PlanMembresia plan = planRepository.findAll().get(0);
-            Membresia m = new Membresia();
-            m.setSocio(s);
-            m.setPlanMembresia(plan);
-            m.setFechaInicio(LocalDate.now());
-            m.setFechaVencimiento(LocalDate.now().plusDays(plan.getDuracionDias()));
-            m.setEstado("ACTIVA");
-            membresiaRepository.save(m);
+            socioRepository.findAll().stream().findFirst().ifPresent(soc -> {
+                planRepository.findByEstado(true).stream()
+                        .filter(plan -> plan.getNombrePlan().equalsIgnoreCase("Plan Básico Mensual"))
+                        .findFirst().ifPresent(plan -> {
+                    Membresia m = new Membresia();
+                    m.setSocio(soc);
+                    m.setPlanMembresia(plan);
+                    m.setFechaInicio(LocalDate.now());
+                    m.setFechaVencimiento(LocalDate.now().plusDays(plan.getDuracionDias()));
+                    m.setEstado("ACTIVA");
+                    membresiaRepository.save(m);
+                });
+            });
         }
+    }
+
+    private Usuario asegurarUsuario(String rolNombre, String correo, String pass) {
+        return usuarioRepository.findByCorreo(correo).orElseGet(() -> crearUsuario(rolNombre, correo, pass));
     }
 
     private void sembrarPagos() {

@@ -244,39 +244,57 @@ export default function Socio() {
                 <div className="bg-[#141414] border border-white/5 rounded-3xl p-8">
                   <div className="flex justify-between items-end mb-6 pb-6 border-b border-white/5">
                     <div>
-                      <h3 className="text-2xl font-bold text-blue-600">{rutina.nombreRutina}</h3>
-                      <p className="text-gray-400 text-sm mt-1">Asignada por: {rutina.entrenador?.nombres || 'Entrenador'}</p>
+                      <h3 className="text-2xl font-bold text-blue-600">{rutina.nombreRutina || rutina.nombre || 'Rutina Activa'}</h3>
+                      <p className="text-gray-400 text-sm mt-1">
+                        Asignada por: {rutina.entrenador?.nombres || rutina.entrenador?.nombre || (typeof rutina.entrenador === 'string' ? rutina.entrenador : 'Instructor del GYM')}
+                      </p>
                     </div>
+                    {rutina.fechaAsignacion && (
+                      <span className="text-xs text-gray-500 font-mono bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                        Asignada: {rutina.fechaAsignacion}
+                      </span>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {rutina.ejercicios?.map((ej, i) => (
-                      <div key={i} className="bg-[#0a0a0a] border border-white/5 p-5 rounded-2xl flex gap-5 items-center hover:border-blue-500/30 transition-colors group">
-                        {ej.ejercicio?.urlGif ? (
-                          <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-white/5 border border-white/10 relative">
-                            <div className="absolute inset-0 bg-blue-600/10 mix-blend-overlay group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
-                            <img src={ej.ejercicio.urlGif} alt="Movimiento" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                    {rutina.ejercicios?.map((ej, i) => {
+                      const nombreEj = ej.ejercicio?.nombreEjercicio || ej.nombreEjercicio || ej.nombre || 'Ejercicio';
+                      const descEj = ej.ejercicio?.descripcion || ej.descripcion || 'Realizar con técnica controlada y respiración adecuada.';
+                      const grupoMusc = ej.ejercicio?.grupoMuscular || ej.grupoMuscular || 'General';
+                      const gifUrl = ej.ejercicio?.urlGif || ej.urlGif;
+
+                      return (
+                        <div key={i} className="bg-[#0a0a0a] border border-white/5 p-5 rounded-2xl flex gap-5 items-center hover:border-blue-500/30 transition-colors group">
+                          {gifUrl ? (
+                            <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-white/5 border border-white/10 relative">
+                              <div className="absolute inset-0 bg-blue-600/10 mix-blend-overlay group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
+                              <img src={gifUrl} alt="Movimiento" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                            </div>
+                          ) : (
+                            <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center">
+                              <Dumbbell className="w-8 h-8 text-blue-500/60" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-lg leading-tight mb-1 text-white truncate">{nombreEj}</p>
+                            <span className="inline-block bg-blue-600/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded mb-2">
+                              {grupoMusc}
+                            </span>
+                            <p className="text-gray-400 text-xs leading-relaxed" title={descEj}>
+                              {descEj}
+                            </p>
                           </div>
-                        ) : (
-                          <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center">
-                            <Dumbbell className="w-8 h-8 text-gray-500" />
+                          <div className="text-right flex-shrink-0 pl-4 border-l border-white/5">
+                            <div className="mb-2">
+                              <p className="font-black text-xl text-white">{ej.series} <span className="text-[10px] text-gray-500 font-bold uppercase">sets</span></p>
+                            </div>
+                            <div>
+                              <p className="font-black text-xl text-blue-600">{ej.repeticiones} <span className="text-[10px] text-gray-500 font-bold uppercase">reps</span></p>
+                            </div>
                           </div>
-                        )}
-                        <div className="flex-1">
-                          <p className="font-bold text-lg leading-tight mb-1">{ej.ejercicio?.nombreEjercicio}</p>
-                          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-2">{ej.ejercicio?.grupoMuscular}</p>
-                          <p className="text-gray-400 text-xs leading-relaxed line-clamp-2" title={ej.ejercicio?.descripcion}>{ej.ejercicio?.descripcion}</p>
                         </div>
-                        <div className="text-right flex-shrink-0 pl-4 border-l border-white/5">
-                          <div className="mb-2">
-                            <p className="font-black text-xl text-white">{ej.series} <span className="text-[10px] text-gray-500 font-bold uppercase">sets</span></p>
-                          </div>
-                          <div>
-                            <p className="font-black text-xl text-blue-600">{ej.repeticiones} <span className="text-[10px] text-gray-500 font-bold uppercase">reps</span></p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {(!rutina.ejercicios || rutina.ejercicios.length === 0) && (
                       <p className="text-gray-500">No hay ejercicios asignados en esta rutina.</p>
                     )}

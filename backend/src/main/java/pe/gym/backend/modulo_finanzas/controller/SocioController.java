@@ -27,8 +27,8 @@ public class SocioController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Socio>> listar() {
-        return ResponseEntity.ok(socioService.listarTodos());
+    public ResponseEntity<List<Map<String, Object>>> listar() {
+        return ResponseEntity.ok(socioService.listarDetallado());
     }
 
     @GetMapping("/{id}")

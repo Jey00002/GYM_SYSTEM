@@ -53,6 +53,9 @@ public class PagoService {
                 .orElseThrow(() -> new RuntimeException("Socio no encontrado"));
         PlanMembresia plan = planRepository.findById(idPlan)
                 .orElseThrow(() -> new RuntimeException("Plan no encontrado"));
+        if (!Boolean.TRUE.equals(plan.getEstado())) {
+            throw new RuntimeException("El plan seleccionado ya no está disponible");
+        }
         MetodoPago metodo = metodoPagoRepository.findById(idMetodo)
                 .orElseThrow(() -> new RuntimeException("Método de pago no encontrado"));
 
