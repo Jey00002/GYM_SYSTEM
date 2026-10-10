@@ -1,0 +1,10 @@
+UPDATE ejercicio SET url_gif = 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif' WHERE id_ejercicio = 1;
+UPDATE ejercicio SET url_gif = 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Squat.gif' WHERE id_ejercicio = 2;
+UPDATE ejercicio SET url_gif = 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Deadlift.gif' WHERE id_ejercicio = 3;
+UPDATE ejercicio SET url_gif = 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-up.gif' WHERE id_ejercicio = 4;
+UPDATE ejercicio SET url_gif = 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Shoulder-Press.gif' WHERE id_ejercicio = 5;
+UPDATE ejercicio SET url_gif = 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Hip-Thrust.gif' WHERE id_ejercicio = 6;
+UPDATE ejercicio SET url_gif = 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Bent-Over-Barbell-Row.gif' WHERE id_ejercicio = 7;
+UPDATE ejercicio SET url_gif = 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Curl.gif' WHERE id_ejercicio = 8;
+UPDATE ejercicio SET url_gif = 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Pushdown.gif' WHERE id_ejercicio = 9;
+UPDATE ejercicio SET url_gif = 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lateral-Raise.gif' WHERE id_ejercicio = 10;

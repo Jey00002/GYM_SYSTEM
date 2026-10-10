@@ -1,0 +1,11 @@
+INSERT INTO ejercicio (nombre_ejercicio, descripcion, grupo_muscular, url_gif) VALUES
+('Press de Banca Plano', 'Fase excéntrica controlada bajando la barra hasta el esternón, pausa de 1 seg, empuje explosivo en la concéntrica.', 'Pecho', 'https://media.giphy.com/media/3o7WTDxXYLqX9Q2UjS/giphy.gif'),
+('Sentadilla Libre (Back Squat)', 'Descenso manteniendo la columna neutra hasta romper el paralelo, empuje desde el talón activando glúteo y cuádriceps.', 'Piernas', 'https://media.giphy.com/media/3o7TKnP2P6Q8kZ2XWg/giphy.gif'),
+('Peso Muerto Convencional', 'Bisagra de cadera profunda, barra rozando las tibias, contracción isométrica de dorsales y empuje de cadera.', 'Piernas/Espalda', 'https://media.giphy.com/media/l41YkxvU8c7J7Bba0/giphy.gif'),
+('Dominadas Estrictas (Pull-ups)', 'Tracción vertical. Inicia con retracción escapular, tirando los codos hacia el torso hasta pasar la barra con la barbilla.', 'Espalda', 'https://media.giphy.com/media/xT1XGYVvVNNxqBvXbO/giphy.gif'),
+('Press Militar con Barra', 'Empuje vertical sobre la cabeza. Core bloqueado, barra viaja en línea recta rozando el perfil facial.', 'Hombros', 'https://media.giphy.com/media/l0HlJzETeG3LpM2zK/giphy.gif'),
+('Hip Thrust (Empuje de Cadera)', 'Apoyo escapular en banco, empuje explosivo de cadera con contracción máxima de glúteo en el punto más alto.', 'Glúteos', 'https://media.giphy.com/media/3o7TKrEzvLbsVAud8I/giphy.gif'),
+('Remo con Barra (Pendlay)', 'Torso paralelo al suelo, tracción horizontal llevando la barra hacia el ombligo, apretando escápulas.', 'Espalda', 'https://media.giphy.com/media/l0HlPtbQa59AbEn0A/giphy.gif'),
+('Curl de Bíceps con Barra', 'Flexión de codo estricta sin balanceo del torso, maximizando la tensión en la fase excéntrica de 3 segundos.', 'Brazos', 'https://media.giphy.com/media/3o7TKWpu2hL4G2R7YI/giphy.gif'),
+('Extensión de Tríceps en Polea', 'Codos pegados a las costillas, extensión total del codo bloqueando en la contracción, fase excéntrica lenta.', 'Brazos', 'https://media.giphy.com/media/xT1XGKz4g8Y8qP3bqw/giphy.gif'),
+('Elevaciones Laterales', 'Abducción de hombro con ligera flexión de codo. El meñique apunta ligeramente hacia arriba en la cima.', 'Hombros', 'https://media.giphy.com/media/l0HlT9p6R1gXg9a3m/giphy.gif');

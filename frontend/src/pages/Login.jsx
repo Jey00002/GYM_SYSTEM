@@ -69,7 +69,13 @@ export default function Login() {
       const res = await api.post('/auth/login-google', requestData);
       procesarToken(res.data.token);
     } catch (err) {
-      setError('Error al iniciar sesión con Google.');
+      const dataStr = typeof err.response?.data === 'string' ? err.response.data : JSON.stringify(err.response?.data || {});
+      const msg = err.response?.data?.message || '';
+      if (msg.includes('no registrado') || dataStr.includes('no registrado')) {
+        setError('Usuario no registrado. Regístrate primero en la página principal.');
+      } else {
+        setError('Error al iniciar sesión con Google.');
+      }
     } finally {
       setCargando(false);
     }

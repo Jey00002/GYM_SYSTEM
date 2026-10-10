@@ -31,6 +31,7 @@ public class ReporteController {
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyRole('GERENTE','ADMIN')")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> dashboard() {
         long activos = membresiaRepository.countByEstado("ACTIVA");
         long morosos = membresiaRepository.countByEstado("MOROSO");
@@ -46,7 +47,17 @@ public class ReporteController {
         data.put("aforoMaximo", 100);
         
         java.time.LocalDate hoy = java.time.LocalDate.now();
-        data.put("proximosVencimientos", membresiaRepository.findByFechaVencimientoBetweenAndEstado(hoy, hoy.plusDays(7), "ACTIVA"));
+        List<Map<String, Object>> vencimientos = membresiaRepository.findByFechaVencimientoBetweenAndEstado(hoy, hoy.plusDays(7), "ACTIVA").stream().map(m -> {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("fechaVencimiento", m.getFechaVencimiento());
+            Map<String, Object> socioMap = new LinkedHashMap<>();
+            socioMap.put("nombres", m.getSocio().getNombres());
+            socioMap.put("apellidos", m.getSocio().getApellidos());
+            socioMap.put("dni", m.getSocio().getDni());
+            map.put("socio", socioMap);
+            return map;
+        }).toList();
+        data.put("proximosVencimientos", vencimientos);
         
         return ResponseEntity.ok(data);
     }

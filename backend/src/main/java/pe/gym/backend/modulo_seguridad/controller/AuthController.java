@@ -1,15 +1,9 @@
 package pe.gym.backend.modulo_seguridad.controller;
 
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pe.gym.backend.modulo_seguridad.dto.GoogleLoginRequest;
-import pe.gym.backend.modulo_seguridad.dto.LoginRequest;
-import pe.gym.backend.modulo_seguridad.dto.LoginResponse;
+import pe.gym.backend.modulo_seguridad.dto.*;
 import pe.gym.backend.modulo_seguridad.service.AuthService;
-
-import java.security.Principal;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -22,23 +16,29 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
     @PostMapping("/login-google")
-    public ResponseEntity<LoginResponse> loginGoogle(@Valid @RequestBody GoogleLoginRequest request) {
+    public ResponseEntity<LoginResponse> loginGoogle(@RequestBody GoogleLoginRequest request) {
         return ResponseEntity.ok(authService.loginGoogle(request));
     }
 
-    @PostMapping("/registro")
-    public ResponseEntity<LoginResponse> registro(@Valid @RequestBody GoogleLoginRequest request) {
-        return ResponseEntity.ok(authService.registroCorreo(request));
+    @PostMapping("/enviar-codigo")
+    public ResponseEntity<Void> enviarCodigo(@RequestBody EnviarCodigoRequest request) {
+        authService.enviarCodigo(request.getCorreo());
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/perfil")
-    public ResponseEntity<Map<String, Object>> perfil(Principal principal) {
-        if (principal == null) throw new RuntimeException("Sin sesion");
-        return ResponseEntity.ok(authService.perfil(principal.getName()));
+    @PostMapping("/registro-manual")
+    public ResponseEntity<LoginResponse> registroManual(@RequestBody RegistroManualRequest request) {
+        return ResponseEntity.ok(authService.registroManual(request));
+    }
+
+    @PostMapping("/recuperar-contrasena")
+    public ResponseEntity<Void> recuperarContrasena(@RequestBody RecuperarContrasenaRequest request) {
+        authService.recuperarContrasena(request);
+        return ResponseEntity.ok().build();
     }
 }
