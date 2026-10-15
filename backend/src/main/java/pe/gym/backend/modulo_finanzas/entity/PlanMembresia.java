@@ -30,4 +30,16 @@ public class PlanMembresia {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_disciplina")
     private Disciplina disciplina;
+
+    @Column(name = "beneficios", columnDefinition = "TEXT")
+    private String beneficios;
+
+    @Column(name = "badge", length = 50)
+    private String badge;
+
+    @Column(name = "color", length = 30)
+    private String color;
+
+    @Column(name = "descripcion", length = 255)
+    private String descripcion;
 }

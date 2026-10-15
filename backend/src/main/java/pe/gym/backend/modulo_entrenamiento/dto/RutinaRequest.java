@@ -17,5 +17,6 @@ public class RutinaRequest {
         @NotNull private Long idEjercicio;
         @NotNull private Integer series;
         @NotNull private Integer repeticiones;
+        private String diaSemana;
     }
 }

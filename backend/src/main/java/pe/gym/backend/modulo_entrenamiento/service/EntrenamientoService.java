@@ -76,9 +76,23 @@ public class EntrenamientoService {
             re.setSeries(det.getSeries());
             re.setRepeticiones(det.getRepeticiones());
             re.setCompletado(false);
+            re.setDiaSemana(normalizarDiaSemana(det.getDiaSemana()));
             rutinaEjercicioRepository.save(re);
         }
         return rutina;
+    }
+
+    public static String normalizarDiaSemana(String dia) {
+        if (dia == null || dia.isBlank()) return "Lunes";
+        String d = dia.trim().toLowerCase();
+        if (d.startsWith("lun")) return "Lunes";
+        if (d.startsWith("mar")) return "Martes";
+        if (d.startsWith("mi")) return "Miércoles";
+        if (d.startsWith("jue")) return "Jueves";
+        if (d.startsWith("vie")) return "Viernes";
+        if (d.startsWith("sab") || d.startsWith("sáb") || d.startsWith("s")) return "Sábado";
+        if (d.startsWith("dom")) return "Domingo";
+        return dia.trim();
     }
 
     @Transactional(readOnly = true)
@@ -124,6 +138,7 @@ public class EntrenamientoService {
             ej.put("series", re.getSeries());
             ej.put("repeticiones", re.getRepeticiones());
             ej.put("completado", re.getCompletado());
+            ej.put("diaSemana", normalizarDiaSemana(re.getDiaSemana()));
 
             Ejercicio ejEntity = re.getEjercicio();
             if (ejEntity != null) {
@@ -217,7 +232,7 @@ public class EntrenamientoService {
     public void marcarEjercicioCompletado(Long idRutinaEjercicio) {
         RutinaEjercicio re = rutinaEjercicioRepository.findById(idRutinaEjercicio)
                 .orElseThrow(() -> new RuntimeException("Registro no encontrado"));
-        re.setCompletado(true); // RN-18
+        re.setCompletado(!Boolean.TRUE.equals(re.getCompletado())); // RN-18 (Permite alternar completado)
         rutinaEjercicioRepository.save(re);
     }
 }

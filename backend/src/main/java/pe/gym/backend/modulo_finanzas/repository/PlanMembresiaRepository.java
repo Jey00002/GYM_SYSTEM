@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface PlanMembresiaRepository extends JpaRepository<PlanMembresia, Long> {
     List<PlanMembresia> findByEstado(Boolean estado);
+    List<PlanMembresia> findAllByOrderByIdAsc();
 }

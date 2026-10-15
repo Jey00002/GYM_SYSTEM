@@ -30,4 +30,7 @@ public class RutinaEjercicio {
 
     @Column(name = "completado")
     private Boolean completado;
+
+    @Column(name = "dia_semana", length = 30)
+    private String diaSemana;
 }

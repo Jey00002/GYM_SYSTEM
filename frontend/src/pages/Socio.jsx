@@ -4,12 +4,38 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   User, CreditCard, Activity, Calendar, History, LogOut, 
-  Search, Save, Dumbbell, AlertCircle, Trophy
+  Search, Save, Dumbbell, AlertCircle, Trophy,
+  CheckCircle2, Circle, Flame, Sparkles, Clock, ChevronRight, Moon, Info
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import api from '../services/api';
+
+const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+const normalizarDia = (dia = '') => {
+  if (!dia) return 'LUNES';
+  const clean = (dia || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trim();
+  if (clean.startsWith('LUN')) return 'LUNES';
+  if (clean.startsWith('MAR')) return 'MARTES';
+  if (clean.startsWith('MIE') || clean.startsWith('MI')) return 'MIERCOLES';
+  if (clean.startsWith('JUE')) return 'JUEVES';
+  if (clean.startsWith('VIE')) return 'VIERNES';
+  if (clean.startsWith('SAB') || clean.startsWith('S')) return 'SABADO';
+  if (clean.startsWith('DOM')) return 'DOMINGO';
+  return clean;
+};
+
+const getDiaActualNombre = () => {
+  const map = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const today = map[new Date().getDay()];
+  return today === 'Domingo' ? 'Lunes' : today;
+};
 
 const TABS = [
   { id: 'membresia', label: 'Mi Membresía', icon: CreditCard },
@@ -27,6 +53,11 @@ export default function Socio() {
   const [mediciones, setMediciones] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [accesos, setAccesos] = useState([]);
+  
+  // Estado para rutina semanal sectorizada
+  const [diaSocioActivo, setDiaSocioActivo] = useState(getDiaActualNombre());
+  const [vistaSemanaCompleta, setVistaSemanaCompleta] = useState(false);
+  const [actualizandoEjercicio, setActualizandoEjercicio] = useState(null);
   
   // Formulario "Mis Datos"
   const [formData, setFormData] = useState({
@@ -73,6 +104,29 @@ export default function Socio() {
       console.error(error);
     } finally {
       setCargando(false);
+    }
+  };
+
+  const toggleEjercicioCompletado = async (idRutinaEjercicio) => {
+    setActualizandoEjercicio(idRutinaEjercicio);
+    // Actualización optimista de interfaz
+    setRutina(prev => {
+      if (!prev || !prev.ejercicios) return prev;
+      return {
+        ...prev,
+        ejercicios: prev.ejercicios.map(e => 
+          e.id === idRutinaEjercicio ? { ...e, completado: !e.completado } : e
+        )
+      };
+    });
+
+    try {
+      await api.put(`/entrenamiento/ejercicios/${idRutinaEjercicio}/completar`);
+    } catch (err) {
+      console.error('Error al actualizar estado del ejercicio', err);
+      cargarDatos();
+    } finally {
+      setActualizandoEjercicio(null);
     }
   };
 
@@ -238,73 +292,369 @@ export default function Socio() {
           )}
 
           {tab === 'rutina' && (
-            <div className="max-w-4xl">
-              <h2 className="text-3xl font-black tracking-tighter mb-8">MI RUTINA</h2>
-              {rutina ? (
-                <div className="bg-[#141414] border border-white/5 rounded-3xl p-8">
-                  <div className="flex justify-between items-end mb-6 pb-6 border-b border-white/5">
-                    <div>
-                      <h3 className="text-2xl font-bold text-blue-600">{rutina.nombreRutina || rutina.nombre || 'Rutina Activa'}</h3>
-                      <p className="text-gray-400 text-sm mt-1">
-                        Asignada por: {rutina.entrenador?.nombres || rutina.entrenador?.nombre || (typeof rutina.entrenador === 'string' ? rutina.entrenador : 'Instructor del GYM')}
-                      </p>
-                    </div>
-                    {rutina.fechaAsignacion && (
-                      <span className="text-xs text-gray-500 font-mono bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
-                        Asignada: {rutina.fechaAsignacion}
-                      </span>
-                    )}
+            <div className="max-w-5xl space-y-6">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 rounded-full">
+                      Plan Semanal Sectorizado
+                    </span>
+                    <span className="text-xs text-gray-400 font-mono">
+                      Lunes a Sábado
+                    </span>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {rutina.ejercicios?.map((ej, i) => {
-                      const nombreEj = ej.ejercicio?.nombreEjercicio || ej.nombreEjercicio || ej.nombre || 'Ejercicio';
-                      const descEj = ej.ejercicio?.descripcion || ej.descripcion || 'Realizar con técnica controlada y respiración adecuada.';
-                      const grupoMusc = ej.ejercicio?.grupoMuscular || ej.grupoMuscular || 'General';
-                      const gifUrl = ej.ejercicio?.urlGif || ej.urlGif;
+                  <h2 className="text-3xl font-black tracking-tight text-white">MIS RUTINAS</h2>
+                  <p className="text-gray-400 text-xs mt-0.5">
+                    Entrenamiento sectorizado por día para optimizar la sobrecarga progresiva y el descanso muscular.
+                  </p>
+                </div>
+
+                {rutina && (
+                  <button
+                    onClick={() => setVistaSemanaCompleta(!vistaSemanaCompleta)}
+                    className="self-start md:self-auto px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-xl text-xs font-bold transition border border-white/10 flex items-center gap-2"
+                  >
+                    <Calendar className="w-4 h-4 text-blue-400" />
+                    {vistaSemanaCompleta ? 'Ver por Días Individuales' : 'Ver Toda la Semana'}
+                  </button>
+                )}
+              </div>
+
+              {rutina ? (
+                <div className="space-y-6">
+                  {/* Tarjeta de Resumen de Rutina */}
+                  <div className="bg-gradient-to-br from-[#121212] via-[#0d0d0d] to-[#080808] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10 pb-6 border-b border-white/5">
+                      <div className="flex items-start gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
+                          <Dumbbell className="w-7 h-7 text-blue-500" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2.5 mb-1 flex-wrap">
+                            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+                              {rutina.estado || 'ACTIVA'}
+                            </span>
+                            {rutina.fechaAsignacion && (
+                              <span className="text-xs font-mono text-gray-500">
+                                Asignada: {rutina.fechaAsignacion}
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                            {rutina.nombreRutina || rutina.nombre || 'Rutina Semanal Integral'}
+                          </h3>
+                          <p className="text-gray-400 text-xs sm:text-sm mt-1">
+                            Instructor:{' '}
+                            <strong className="text-white">
+                              {rutina.entrenador?.nombres || rutina.entrenador?.nombre || (typeof rutina.entrenador === 'string' ? rutina.entrenador : 'Instructor del GYM')}
+                            </strong>
+                            {rutina.entrenador?.especialidad && (
+                              <span className="text-gray-500"> ({rutina.entrenador.especialidad})</span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Métricas rápidas de la semana */}
+                      {(() => {
+                        const totalEjercicios = (rutina.ejercicios || []).length;
+                        const diasConEjercicio = DIAS_SEMANA.filter(d => 
+                          (rutina.ejercicios || []).some(e => normalizarDia(e.diaSemana || 'Lunes') === normalizarDia(d))
+                        ).length;
+                        const diasDescanso = 6 - diasConEjercicio;
+                        const totalCompletados = (rutina.ejercicios || []).filter(e => e.completado).length;
+
+                        return (
+                          <div className="grid grid-cols-3 gap-3 bg-black/40 border border-white/5 rounded-2xl p-3.5">
+                            <div className="text-center px-2">
+                              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Días Activos</p>
+                              <p className="text-xl font-black text-white mt-0.5">{diasConEjercicio}<span className="text-xs text-gray-500 font-normal"> / 6</span></p>
+                            </div>
+                            <div className="text-center px-2 border-x border-white/5">
+                              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Descanso</p>
+                              <p className="text-xl font-black text-blue-400 mt-0.5">{diasDescanso}<span className="text-xs text-gray-500 font-normal"> d.</span></p>
+                            </div>
+                            <div className="text-center px-2">
+                              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Ejercicios</p>
+                              <p className="text-xl font-black text-emerald-400 mt-0.5">{totalCompletados}<span className="text-xs text-gray-500 font-normal">/{totalEjercicios}</span></p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Barra Selectora de Días de Lunes a Sábado */}
+                    <div className="mt-6">
+                      <div className="flex justify-between items-center mb-3">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                          <Clock className="w-3.5 h-3.5 text-blue-400" /> Selecciona un Día de Entrenamiento:
+                        </label>
+                        <span className="text-xs text-gray-500">
+                          Hoy es <strong className="text-white">{getDiaActualNombre()}</strong>
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                        {DIAS_SEMANA.map((dia) => {
+                          const ejsDia = (rutina.ejercicios || []).filter(
+                            e => normalizarDia(e.diaSemana || 'Lunes') === normalizarDia(dia)
+                          );
+                          const count = ejsDia.length;
+                          const completadosDia = ejsDia.filter(e => e.completado).length;
+                          const todoCompletado = count > 0 && completadosDia === count;
+                          const esHoy = normalizarDia(dia) === normalizarDia(getDiaActualNombre());
+                          const isActivo = !vistaSemanaCompleta && normalizarDia(diaSocioActivo) === normalizarDia(dia);
+
+                          return (
+                            <button
+                              key={dia}
+                              onClick={() => {
+                                setVistaSemanaCompleta(false);
+                                setDiaSocioActivo(dia);
+                              }}
+                              className={`relative p-3.5 rounded-2xl border text-left transition-all ${
+                                isActivo
+                                  ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/30'
+                                  : 'bg-[#080808] hover:bg-white/5 border-white/5 text-gray-300 hover:text-white'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1 mb-1.5">
+                                <span className="text-xs font-black uppercase tracking-wide truncate">
+                                  {dia}
+                                </span>
+                                {esHoy && (
+                                  <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full ${
+                                    isActivo ? 'bg-white text-blue-600' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                                  }`}>
+                                    HOY
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex items-center justify-between text-[11px]">
+                                <span className={`font-medium ${
+                                  count > 0 
+                                    ? (isActivo ? 'text-white/90' : 'text-gray-400')
+                                    : (isActivo ? 'text-white/60' : 'text-gray-600')
+                                }`}>
+                                  {count > 0 ? `${count} ejercicios` : 'Descanso'}
+                                </span>
+                                {todoCompletado && (
+                                  <CheckCircle2 className={`w-3.5 h-3.5 ${isActivo ? 'text-white' : 'text-emerald-400'}`} />
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CONTENIDO DEL DÍA O SEMANA COMPLETA */}
+                  <div className="space-y-6">
+                    {(vistaSemanaCompleta ? DIAS_SEMANA : [diaSocioActivo]).map(dia => {
+                      const ejsDia = (rutina.ejercicios || []).filter(
+                        e => normalizarDia(e.diaSemana || 'Lunes') === normalizarDia(dia)
+                      );
+                      const count = ejsDia.length;
+                      const completados = ejsDia.filter(e => e.completado).length;
+                      const porcentaje = count > 0 ? Math.round((completados / count) * 100) : 0;
+                      const esHoy = normalizarDia(dia) === normalizarDia(getDiaActualNombre());
+
+                      // Grupos musculares únicos en este día
+                      const gruposDia = Array.from(new Set(
+                        ejsDia.map(e => e.ejercicio?.grupoMuscular || e.grupoMuscular || 'General')
+                      ));
 
                       return (
-                        <div key={i} className="bg-[#0a0a0a] border border-white/5 p-5 rounded-2xl flex gap-5 items-center hover:border-blue-500/30 transition-colors group">
-                          {gifUrl ? (
-                            <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-white/5 border border-white/10 relative">
-                              <div className="absolute inset-0 bg-blue-600/10 mix-blend-overlay group-hover:bg-transparent transition-colors z-10 pointer-events-none"></div>
-                              <img src={gifUrl} alt="Movimiento" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                        <div 
+                          key={dia} 
+                          className={`bg-[#141414] border rounded-3xl p-6 sm:p-8 transition-all ${
+                            esHoy ? 'border-blue-500/40 shadow-xl shadow-blue-500/5' : 'border-white/5'
+                          }`}
+                        >
+                          {/* Cabecera del Día */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 mb-6 border-b border-white/5">
+                            <div>
+                              <div className="flex items-center gap-2.5 mb-1 flex-wrap">
+                                <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                                <h4 className="text-2xl font-black text-white uppercase tracking-tight">
+                                  {dia}
+                                </h4>
+                                {esHoy && (
+                                  <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-blue-600 text-white shadow-md shadow-blue-600/30">
+                                    Día de Hoy
+                                  </span>
+                                )}
+                                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+                                  count > 0 
+                                    ? 'bg-blue-600/10 text-blue-400 border-blue-500/20' 
+                                    : 'bg-white/5 text-gray-500 border-white/10'
+                                }`}>
+                                  {count > 0 ? `${count} ejercicios programados` : 'Recuperación Activa'}
+                                </span>
+                              </div>
+                              {gruposDia.length > 0 ? (
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Enfoque muscular: <strong className="text-blue-400 font-bold">{gruposDia.join(' • ')}</strong>
+                                </p>
+                              ) : (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Día reservado para recuperación física y descanso metabólico.
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Barra de progreso del día */}
+                            {count > 0 && (
+                              <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl p-3 min-w-[200px]">
+                                <div className="flex justify-between items-center text-xs mb-1.5">
+                                  <span className="text-gray-400 font-medium">Progreso del día:</span>
+                                  <span className="font-bold text-white font-mono">{completados}/{count} ({porcentaje}%)</span>
+                                </div>
+                                <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-gradient-to-r from-blue-600 to-emerald-500 transition-all duration-500"
+                                    style={{ width: `${porcentaje}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Listado de Ejercicios del Día */}
+                          {count > 0 ? (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              {ejsDia.map((ej, idx) => {
+                                const nom = ej.ejercicio?.nombreEjercicio || ej.nombreEjercicio || ej.nombre || 'Ejercicio';
+                                const desc = ej.ejercicio?.descripcion || ej.descripcion || 'Ejecutar con rango de movimiento completo y respiración coordinada.';
+                                const grupo = ej.ejercicio?.grupoMuscular || ej.grupoMuscular || 'General';
+                                const gif = ej.ejercicio?.urlGif || ej.urlGif;
+                                const completado = Boolean(ej.completado);
+
+                                return (
+                                  <div 
+                                    key={ej.id || idx}
+                                    className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between gap-4 ${
+                                      completado 
+                                        ? 'bg-[#0c1610] border-emerald-500/30' 
+                                        : 'bg-[#0a0a0a] hover:bg-[#0e0e0e] border-white/5 hover:border-white/10'
+                                    }`}
+                                  >
+                                    <div className="flex gap-4 items-start">
+                                      {/* Visual / Thumbnail */}
+                                      {gif ? (
+                                        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-white/5 border border-white/10 relative">
+                                          <img src={gif} alt={nom} className="w-full h-full object-cover" />
+                                        </div>
+                                      ) : (
+                                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 border ${
+                                          completado 
+                                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                                            : 'bg-white/5 border-white/10 text-blue-500'
+                                        }`}>
+                                          <Dumbbell className="w-6 h-6" />
+                                        </div>
+                                      )}
+
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                          <span className="text-xs font-mono font-bold text-gray-500">#{idx + 1}</span>
+                                          <h5 className={`font-bold text-base truncate ${completado ? 'line-through text-gray-400' : 'text-white'}`}>
+                                            {nom}
+                                          </h5>
+                                          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-600/10 text-blue-400 border border-blue-500/20">
+                                            {grupo}
+                                          </span>
+                                        </div>
+                                        <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
+                                          {desc}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {/* Footer con Sets, Reps y Botón Completado */}
+                                    <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                                      <div className="flex items-center gap-3">
+                                        <div className="text-left">
+                                          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Series</span>
+                                          <span className="text-base font-black text-white">{ej.series} <span className="text-[10px] text-gray-400">sets</span></span>
+                                        </div>
+                                        <span className="text-gray-700">|</span>
+                                        <div className="text-left">
+                                          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Repeticiones</span>
+                                          <span className="text-base font-black text-blue-400">{ej.repeticiones} <span className="text-[10px] text-gray-400">reps</span></span>
+                                        </div>
+                                      </div>
+
+                                      {/* Botón para marcar completado (RN-18) */}
+                                      <button
+                                        onClick={() => toggleEjercicioCompletado(ej.id)}
+                                        disabled={actualizandoEjercicio === ej.id}
+                                        className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                                          completado
+                                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30'
+                                            : 'bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10'
+                                        }`}
+                                      >
+                                        {completado ? (
+                                          <>
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                                            <span>Hecho</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Circle className="w-4 h-4 text-gray-400" />
+                                            <span>Marcar hecho</span>
+                                          </>
+                                        )}
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           ) : (
-                            <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center">
-                              <Dumbbell className="w-8 h-8 text-blue-500/60" />
+                            /* Banner de Día de Descanso */
+                            <div className="bg-[#0a0a0a] border border-dashed border-white/10 rounded-2xl p-8 text-center max-w-xl mx-auto">
+                              <div className="w-14 h-14 bg-blue-600/10 rounded-2xl flex items-center justify-center mx-auto mb-3 text-blue-400 border border-blue-500/20">
+                                <Moon className="w-7 h-7" />
+                              </div>
+                              <h5 className="font-bold text-lg text-white mb-1">
+                                Día de Descanso y Recuperación
+                              </h5>
+                              <p className="text-xs text-gray-400 leading-relaxed mb-4">
+                                No tienes ejercicios programados para el <strong className="text-white">{dia}</strong>. El descanso muscular es donde ocurre la hipertrofia y adaptación del tejido.
+                              </p>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left bg-white/[0.02] border border-white/5 rounded-xl p-3 text-[11px] text-gray-400">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-blue-400 font-bold">💧</span> Hidrátate bien
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-emerald-400 font-bold">🥗</span> Alta proteína
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-amber-400 font-bold">😴</span> 7-8h de sueño
+                                </div>
+                              </div>
                             </div>
                           )}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-lg leading-tight mb-1 text-white truncate">{nombreEj}</p>
-                            <span className="inline-block bg-blue-600/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded mb-2">
-                              {grupoMusc}
-                            </span>
-                            <p className="text-gray-400 text-xs leading-relaxed" title={descEj}>
-                              {descEj}
-                            </p>
-                          </div>
-                          <div className="text-right flex-shrink-0 pl-4 border-l border-white/5">
-                            <div className="mb-2">
-                              <p className="font-black text-xl text-white">{ej.series} <span className="text-[10px] text-gray-500 font-bold uppercase">sets</span></p>
-                            </div>
-                            <div>
-                              <p className="font-black text-xl text-blue-600">{ej.repeticiones} <span className="text-[10px] text-gray-500 font-bold uppercase">reps</span></p>
-                            </div>
-                          </div>
                         </div>
                       );
                     })}
-                    {(!rutina.ejercicios || rutina.ejercicios.length === 0) && (
-                      <p className="text-gray-500">No hay ejercicios asignados en esta rutina.</p>
-                    )}
                   </div>
                 </div>
               ) : (
-                <div className="bg-[#141414] border border-white/5 rounded-3xl p-10 text-center">
-                  <Dumbbell className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold mb-2">Sin Rutina Asignada</h3>
-                  <p className="text-gray-400">Pide a un entrenador que te asigne una rutina desde su panel.</p>
+                <div className="bg-[#141414] border border-white/5 rounded-3xl p-12 text-center max-w-2xl mx-auto">
+                  <div className="w-16 h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/20 text-blue-400">
+                    <Dumbbell className="w-8 h-8 opacity-60" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Sin Rutina Asignada</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                    Aún no tienes un plan de ejercicios semanal asignado. Acércate a tu entrenador o solicítale que configure tu rutina de Lunes a Sábado desde su panel de Entrenador.
+                  </p>
                 </div>
               )}
             </div>

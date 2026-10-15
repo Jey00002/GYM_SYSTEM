@@ -65,6 +65,40 @@ const obtenerNivel = (nombrePlan = '') => {
   return null;
 };
 
+const parseBeneficios = (plan, fallbackNivel) => {
+  if (Array.isArray(plan.beneficios)) return plan.beneficios;
+  if (typeof plan.beneficios === 'string' && plan.beneficios.trim().startsWith('[')) {
+    try {
+      const parsed = JSON.parse(plan.beneficios);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch (e) {}
+  }
+  if (typeof plan.beneficios === 'string' && plan.beneficios.trim().length > 0) {
+    const lines = plan.beneficios.split('\n').map(s => s.trim()).filter(Boolean);
+    if (lines.length > 0) return lines;
+  }
+  return fallbackNivel?.beneficios || [
+    'Acceso ilimitado a máquinas',
+    'Acceso a vestidores y duchas'
+  ];
+};
+
+const resolverNivel = (plan) => {
+  const nivelBase = obtenerNivel(plan.nombrePlan);
+  const beneficios = parseBeneficios(plan, nivelBase);
+  const color = plan.color || nivelBase?.color || '#2563eb';
+  const badge = plan.badge || nivelBase?.badge || 'Exclusivo';
+  const nombre = plan.nombrePlan || nivelBase?.nombre || 'Plan GymStar';
+
+  return {
+    key: nivelBase?.key || `custom-${plan.id}`,
+    nombre,
+    badge,
+    color,
+    beneficios
+  };
+};
+
 const coincideDuracion = (plan, duracion) => {
   const dias = Number(plan.duracionDias);
   const nombre = normalizar(plan.nombrePlan || '');
@@ -365,164 +399,187 @@ export default function Landing() {
           </motion.div>
 
           {/* Selector de periodo: Todos, Por Mes, Por Trimestre, Por Anual */}
-          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-16">
-            <button
-              onClick={() => setFiltroPeriodo('TODOS')}
-              className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 ${
-                filtroPeriodo === 'TODOS'
-                  ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105'
-                  : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10'
-              }`}
-            >
-              ✨ Todos los Periodos
-            </button>
-            {DURACIONES.map(d => (
-              <button
-                key={d.id}
-                onClick={() => setFiltroPeriodo(d.id)}
-                className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 ${
-                  filtroPeriodo === d.id
-                    ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105'
-                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10'
-                }`}
-              >
-                {d.etiqueta}
-              </button>
-            ))}
-          </div>
-          
-          {loadingPlanes ? (
-            <div className="py-16 text-center text-gray-400">
-              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-sm font-semibold tracking-wide">Cargando planes de membresía...</p>
-            </div>
-          ) : (
-            <div className="space-y-24">
-              {(filtroPeriodo === 'TODOS' ? DURACIONES : DURACIONES.filter(d => d.id === filtroPeriodo)).map((duracion, durIdx) => {
-                const listaPlanes = planes.length > 0 ? planes : PLANES_DEFAULT;
-                const planesDeDuracion = listaPlanes
-                  .filter(plan => coincideDuracion(plan, duracion))
-                  .map(plan => ({ ...plan, nivel: obtenerNivel(plan.nombrePlan) }))
-                  .filter(plan => plan.nivel)
-                  .filter((plan, index, self) => index === self.findIndex(p => p.nivel.key === plan.nivel.key))
-                  .sort((a, b) => {
-                    const orden = { basico: 1, dorado: 2, diamante: 3 };
-                    return (orden[a.nivel.key] || 99) - (orden[b.nivel.key] || 99);
+          {(() => {
+            const listaPlanesTotal = planes.length > 0 ? planes : PLANES_DEFAULT;
+            const duracionesDisponibles = [...DURACIONES];
+            listaPlanesTotal.forEach(p => {
+              const dias = Number(p.duracionDias);
+              if (dias && !DURACIONES.some(d => d.dias === dias || coincideDuracion(p, d))) {
+                const id = `dias-${dias}`;
+                if (!duracionesDisponibles.some(d => d.id === id)) {
+                  duracionesDisponibles.push({
+                    id,
+                    nombre: `${dias} Días`,
+                    etiqueta: `Por ${dias} Días`,
+                    dias: dias,
+                    descripcion: `Membresía por ${dias} días`
                   });
+                }
+              }
+            });
 
-                return (
-                  <div key={duracion.id} className="relative">
-                    <div className="text-center mb-10">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 text-[11px] font-black uppercase tracking-widest mb-2">
-                        {duracion.id === 'mes' ? '1. Planes por Mes' : duracion.id === 'trimestre' ? '2. Planes por Trimestre' : '3. Planes por Anual'}
-                      </div>
-                      <h3 className="text-2xl md:text-3xl font-black tracking-tight text-white">{duracion.etiqueta}</h3>
-                      <p className="text-gray-400 text-xs md:text-sm mt-1">{duracion.descripcion} · {duracion.dias} días de membresía</p>
-                    </div>
+            return (
+              <>
+                <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-16">
+                  <button
+                    onClick={() => setFiltroPeriodo('TODOS')}
+                    className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                      filtroPeriodo === 'TODOS'
+                        ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105'
+                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10'
+                    }`}
+                  >
+                    ✨ Todos los Periodos
+                  </button>
+                  {duracionesDisponibles.map(d => (
+                    <button
+                      key={d.id}
+                      onClick={() => setFiltroPeriodo(d.id)}
+                      className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                        filtroPeriodo === d.id
+                          ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105'
+                          : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10'
+                      }`}
+                    >
+                      {d.etiqueta}
+                    </button>
+                  ))}
+                </div>
 
-                    <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto items-stretch">
-                      <AnimatePresence mode="popLayout">
-                        {planesDeDuracion.map((plan, i) => {
-                          const esDiamante = plan.nivel.key === 'diamante';
-                          const esDorado = plan.nivel.key === 'dorado';
-                          const discColor = plan.nivel.color;
-
-                          return (
-                            <motion.div
-                              layout
-                              key={plan.id || `${plan.nivel.key}-${duracion.id}`}
-                              initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.9, y: -30 }}
-                              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 }}
-                              className={`relative rounded-[2rem] p-[1px] group ${esDiamante ? 'lg:scale-105 z-10' : 'z-0'}`}
-                              style={{ 
-                                background: esDiamante 
-                                  ? `linear-gradient(135deg, ${discColor}, rgba(168, 85, 247, 0.3) 50%, transparent 80%)` 
-                                  : esDorado 
-                                  ? `linear-gradient(135deg, ${discColor}, transparent 80%)` 
-                                  : 'rgba(255,255,255,0.08)' 
-                              }}
-                            >
-                              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2rem] pointer-events-none"></div>
-                              <div className="rounded-[calc(2rem-1px)] p-7 h-full flex flex-col bg-[#0d0d0d]/95 backdrop-blur-xl relative z-10 border border-white/5 shadow-2xl">
-                                
-                                <div className="flex items-center justify-between gap-2 mb-3">
-                                  <span 
-                                    className="text-[10px] font-black uppercase tracking-[0.25em] px-2.5 py-1 rounded-full border"
+                {loadingPlanes ? (
+                  <div className="py-16 text-center text-gray-400">
+                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-sm font-semibold tracking-wide">Cargando planes de membresía...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-24">
+                    {(filtroPeriodo === 'TODOS' ? duracionesDisponibles : duracionesDisponibles.filter(d => d.id === filtroPeriodo)).map((duracion, durIdx) => {
+                      const planesDeDuracion = listaPlanesTotal
+                        .filter(plan => coincideDuracion(plan, duracion))
+                        .map(plan => ({ ...plan, nivel: resolverNivel(plan) }))
+                        .sort((a, b) => {
+                          const orden = { basico: 1, dorado: 2, diamante: 3 };
+                          const ordA = orden[a.nivel.key] || 100 + (a.id || 0);
+                          const ordB = orden[b.nivel.key] || 100 + (b.id || 0);
+                          return ordA - ordB;
+                        });
+                      return (
+                        <div key={duracion.id} className="relative">
+                          <div className="text-center mb-10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 text-[11px] font-black uppercase tracking-widest mb-2">
+                              {duracion.id === 'mes' ? '1. Planes por Mes' : duracion.id === 'trimestre' ? '2. Planes por Trimestre' : duracion.id === 'anual' ? '3. Planes por Anual' : `Planes por ${duracion.nombre}`}
+                            </div>
+                            <h3 className="text-2xl md:text-3xl font-black tracking-tight text-white">{duracion.etiqueta}</h3>
+                            <p className="text-gray-400 text-xs md:text-sm mt-1">{duracion.descripcion} · {duracion.dias} días de membresía</p>
+                          </div>
+                          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto items-stretch">
+                            <AnimatePresence mode="popLayout">
+                              {planesDeDuracion.map((plan, i) => {
+                                const esDiamante = plan.nivel.key === 'diamante';
+                                const esDorado = plan.nivel.key === 'dorado';
+                                const discColor = plan.nivel.color;
+                                return (
+                                  <motion.div
+                                    layout
+                                    key={plan.id || `${plan.nivel.key}-${duracion.id}`}
+                                    initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9, y: -30 }}
+                                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 }}
+                                    className={`relative rounded-[2rem] p-[1px] group ${esDiamante ? 'lg:scale-105 z-10' : 'z-0'}`}
                                     style={{ 
-                                      color: discColor, 
-                                      borderColor: `${discColor}40`,
-                                      backgroundColor: `${discColor}15`
+                                      background: esDiamante 
+                                        ? `linear-gradient(135deg, ${discColor}, rgba(168, 85, 247, 0.3) 50%, transparent 80%)` 
+                                        : esDorado 
+                                        ? `linear-gradient(135deg, ${discColor}, transparent 80%)` 
+                                        : `linear-gradient(135deg, ${discColor}80, rgba(255,255,255,0.05) 60%)` 
                                     }}
                                   >
-                                    {plan.nivel.badge}
-                                  </span>
-                                  {esDiamante && (
-                                    <div className="flex items-center gap-1" style={{ color: discColor }}>
-                                      <Trophy className="w-4 h-4" />
-                                      <span className="text-[10px] font-black uppercase tracking-wider">Top Tier</span>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <p className="text-white font-black text-2xl tracking-tight">{plan.nivel.nombre}</p>
-                                
-                                <div className="mt-4 mb-6 pb-6 border-b border-white/10">
-                                  <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest block">Inversión Total</span>
-                                  <div className="flex items-baseline gap-1 mt-1">
-                                    <span className="text-lg font-bold text-gray-400">S/</span>
-                                    <p className="text-4xl font-black text-white tracking-tighter">
-                                      {Number(plan.tarifa)}
-                                    </p>
-                                    <span className="text-gray-500 text-xs font-medium ml-1">/{duracion.etiqueta.toLowerCase()}</span>
-                                  </div>
-                                </div>
-
-                                <div className="flex-1">
-                                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">Beneficios incluidos:</p>
-                                  <ul className="space-y-3">
-                                    {plan.nivel.beneficios.map((f, j) => (
-                                      <li key={j} className="flex items-start gap-2.5 text-sm">
-                                        <div 
-                                          className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                                          style={{ backgroundColor: `${discColor}20`, color: discColor }}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2rem] pointer-events-none"></div>
+                                    <div className="rounded-[calc(2rem-1px)] p-7 h-full flex flex-col bg-[#0d0d0d]/95 backdrop-blur-xl relative z-10 border border-white/5 shadow-2xl">
+                                      
+                                      <div className="flex items-center justify-between gap-2 mb-3">
+                                        <span 
+                                          className="text-[10px] font-black uppercase tracking-[0.25em] px-2.5 py-1 rounded-full border"
+                                          style={{ 
+                                            color: discColor, 
+                                            borderColor: `${discColor}40`,
+                                            backgroundColor: `${discColor}15`
+                                          }}
                                         >
-                                          <Check className="w-3 h-3" strokeWidth={3} />
-                                        </div>
-                                        <span className="text-gray-300 text-xs font-medium leading-relaxed">{f}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
+                                          {plan.nivel.badge}
+                                        </span>
+                                        {esDiamante && (
+                                          <div className="flex items-center gap-1" style={{ color: discColor }}>
+                                            <Trophy className="w-4 h-4" />
+                                            <span className="text-[10px] font-black uppercase tracking-wider">Top Tier</span>
+                                          </div>
+                                        )}
+                                      </div>
 
-                                <button
-                                  onClick={() => abrirPago(plan)}
-                                  className="mt-8 w-full py-3.5 rounded-xl font-black uppercase tracking-[0.12em] text-xs transition-all duration-300 hover:shadow-[0_0_25px_rgba(37,99,235,0.35)] hover:-translate-y-0.5"
-                                  style={{
-                                    backgroundColor: esDiamante ? discColor : esDorado ? '#eab308' : '#2563eb',
-                                    color: esDorado ? '#000000' : '#ffffff',
-                                    fontWeight: 900
-                                  }}
-                                >
-                                  Adquirir {plan.nivel.nombre}
-                                </button>
+                                      <p className="text-white font-black text-2xl tracking-tight">{plan.nivel.nombre}</p>
+                                      {plan.descripcion && (
+                                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">{plan.descripcion}</p>
+                                      )}
+                                      
+                                      <div className="mt-4 mb-6 pb-6 border-b border-white/10">
+                                        <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest block">Inversión Total</span>
+                                        <div className="flex items-baseline gap-1 mt-1">
+                                          <span className="text-lg font-bold text-gray-400">S/</span>
+                                          <p className="text-4xl font-black text-white tracking-tighter">
+                                            {Number(plan.tarifa)}
+                                          </p>
+                                          <span className="text-gray-500 text-xs font-medium ml-1">/{duracion.etiqueta.toLowerCase()}</span>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex-1">
+                                        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">Beneficios incluidos:</p>
+                                        <ul className="space-y-3">
+                                          {plan.nivel.beneficios.map((f, j) => (
+                                            <li key={j} className="flex items-start gap-2.5 text-sm">
+                                              <div 
+                                                className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                                                style={{ backgroundColor: `${discColor}20`, color: discColor }}
+                                              >
+                                                <Check className="w-3 h-3" strokeWidth={3} />
+                                              </div>
+                                              <span className="text-gray-300 text-xs font-medium leading-relaxed">{f}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+
+                                      <button
+                                        onClick={() => abrirPago(plan)}
+                                        className="mt-8 w-full py-3.5 rounded-xl font-black uppercase tracking-[0.12em] text-xs transition-all duration-300 hover:shadow-[0_0_25px_rgba(37,99,235,0.35)] hover:-translate-y-0.5"
+                                        style={{
+                                          backgroundColor: esDiamante ? discColor : esDorado ? '#eab308' : (plan.nivel.color || '#2563eb'),
+                                          color: esDorado ? '#000000' : '#ffffff',
+                                          fontWeight: 900
+                                        }}
+                                      >
+                                        Adquirir {plan.nivel.nombre}
+                                      </button>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </AnimatePresence>
+                            {planesDeDuracion.length === 0 && (
+                              <div className="col-span-full py-12 text-center text-gray-500">
+                                No hay planes disponibles para esta duración en este momento.
                               </div>
-                            </motion.div>
-                          );
-                        })}
-                      </AnimatePresence>
-                      {planesDeDuracion.length === 0 && (
-                        <div className="col-span-full py-12 text-center text-gray-500">
-                          No hay planes disponibles para esta duración en este momento.
+                            )}
+                          </motion.div>
                         </div>
-                      )}
-                    </motion.div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-          )}
+                )}
+              </>
+            );
+          })()}
         </div>
       </section>
 

@@ -126,6 +126,7 @@ public class PanelSocioController {
                 ej.put("series", re.getSeries());
                 ej.put("repeticiones", re.getRepeticiones());
                 ej.put("completado", re.getCompletado());
+                ej.put("diaSemana", pe.gym.backend.modulo_entrenamiento.service.EntrenamientoService.normalizarDiaSemana(re.getDiaSemana()));
 
                 pe.gym.backend.modulo_entrenamiento.entity.Ejercicio ejEntity = re.getEjercicio();
                 if (ejEntity != null) {
