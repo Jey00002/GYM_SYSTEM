@@ -1,5 +1,7 @@
 node_modules/
 target/
+dist/
+.idea/
 .env
 .DS_Store
 Thumbs.db

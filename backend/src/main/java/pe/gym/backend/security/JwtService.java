@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -14,11 +15,12 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    private static final String SECRET = "gym-system-2026-clave-super-secreta-para-firmar-jwt-hs256-utp";
+    @Value("${jwt.secret:${JWT_SECRET:gym-system-2026-clave-super-secreta-para-firmar-jwt-hs256-utp}}")
+    private String secret = "gym-system-2026-clave-super-secreta-para-firmar-jwt-hs256-utp";
     private static final long EXPIRACION_MS = 1000L * 60 * 60 * 24 * 7;
 
     private Key key() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     public String generateToken(String correo, String rol) {

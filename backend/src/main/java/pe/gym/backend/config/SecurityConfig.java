@@ -1,5 +1,6 @@
 package pe.gym.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,12 +18,18 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import pe.gym.backend.security.JwtAuthenticationFilter;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    @Value("${FRONTEND_URL:http://localhost:5173}")
+    private String frontendUrl;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -56,9 +63,23 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOrigins(List.of("http://localhost:5173"));
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        
+        Set<String> origins = new LinkedHashSet<>();
+        origins.add("http://localhost:5173");
+        if (frontendUrl != null && !frontendUrl.isBlank()) {
+            for (String origin : frontendUrl.split(",")) {
+                String clean = origin.trim();
+                if (!clean.isEmpty()) {
+                    origins.add(clean);
+                }
+            }
+        }
+        
+        cfg.setAllowedOrigins(new ArrayList<>(origins));
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
+        cfg.setAllowCredentials(true);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
         return source;
