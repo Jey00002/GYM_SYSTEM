@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -13,10 +14,10 @@ import {
 import api from '../services/api';
 
 const MESES = { '01':'Ene','02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun','07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic' };
-const COLORES_ESTADO = { ACTIVA: '#22c55e', MOROSO: '#ef4444', VENCIDA: '#ef4444', SUSPENDIDA: '#2563eb' };
+const COLORES_ESTADO = { ACTIVA: '#22c55e', INACTIVO: '#ef4444', MOROSO: '#ef4444', VENCIDA: '#ef4444', SUSPENDIDA: '#1e3a8a' };
 
 const PALETA_COLORES = [
-  { nombre: 'Azul Élite', hex: '#2563eb' },
+  { nombre: 'Azul Marino Élite', hex: '#1e3a8a' },
   { nombre: 'Dorado Solar', hex: '#eab308' },
   { nombre: 'Púrpura VIP', hex: '#a855f7' },
   { nombre: 'Verde Esmeralda', hex: '#10b981' },
@@ -66,7 +67,7 @@ export default function DashboardGerente() {
     duracionDias: 30,
     tarifa: '',
     badge: 'Recomendado',
-    color: '#2563eb',
+    color: '#1e3a8a',
     descripcion: '',
     estado: true,
     idDisciplina: null,
@@ -81,6 +82,11 @@ export default function DashboardGerente() {
 
   const mostrarNotificacion = (tipo, mensaje) => {
     setNotificacion({ tipo, mensaje });
+    if (tipo === 'exito') {
+      toast.success(mensaje);
+    } else {
+      toast.error(mensaje);
+    }
     setTimeout(() => {
       setNotificacion(null);
     }, 4500);
@@ -100,11 +106,14 @@ export default function DashboardGerente() {
         mes: MESES[x.mes.split('-')[1]] || x.mes,
         ingresos: Number(x.total)
       })));
-      setMembresias(m.data.map(x => ({
-        name: x.estado,
-        value: Number(x.total),
-        color: COLORES_ESTADO[x.estado] || '#2563eb'
-      })));
+      setMembresias(m.data.map(x => {
+        const est = x.estado === 'MOROSO' ? 'INACTIVO' : x.estado;
+        return {
+          name: est,
+          value: Number(x.total),
+          color: COLORES_ESTADO[est] || COLORES_ESTADO[x.estado] || '#2563eb'
+        };
+      }));
       setVentasDisciplina(vd.data);
       setError(false);
     } catch (e) {
@@ -210,11 +219,30 @@ export default function DashboardGerente() {
     }));
   };
 
+  const notificarActualizacionPlanes = () => {
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('gym_planes_channel');
+        channel.postMessage({ action: 'RELOAD_PLANES', timestamp: Date.now() });
+        channel.close();
+      }
+    } catch (e) {
+      // Fallback ignore
+    }
+    try {
+      localStorage.setItem('gym_planes_updated_at', Date.now().toString());
+    } catch (e) {}
+    try {
+      window.dispatchEvent(new CustomEvent('planes-actualizados', { detail: { timestamp: Date.now() } }));
+    } catch (e) {}
+  };
+
   const alternarEstadoPlan = async (plan) => {
     try {
       const res = await api.patch(`/planes/${plan.id}/estado`);
       mostrarNotificacion('exito', res.data?.mensaje || 'Estado del plan actualizado correctamente.');
       cargarPlanes();
+      notificarActualizacionPlanes();
     } catch (err) {
       mostrarNotificacion('error', 'No se pudo cambiar el estado del plan.');
     }
@@ -262,6 +290,7 @@ export default function DashboardGerente() {
       }
       setModalPlan(false);
       cargarPlanes();
+      notificarActualizacionPlanes();
     } catch (err) {
       const msg = err.response?.data?.error || err.response?.data?.message || 'Error al guardar el plan.';
       mostrarNotificacion('error', msg);
@@ -277,6 +306,7 @@ export default function DashboardGerente() {
       mostrarNotificacion('exito', res.data?.mensaje || 'Operación completada con éxito.');
       setModalEliminar(null);
       cargarPlanes();
+      notificarActualizacionPlanes();
     } catch (err) {
       const msg = err.response?.data?.error || 'No se pudo eliminar el plan.';
       mostrarNotificacion('error', msg);
@@ -368,7 +398,7 @@ export default function DashboardGerente() {
             onClick={() => setSeccion('resumen')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-bold ${
               seccion === 'resumen' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                ? 'bg-blue-600/90 text-white border border-blue-400/20 shadow-md shadow-black/40' 
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -379,7 +409,7 @@ export default function DashboardGerente() {
             onClick={() => setSeccion('planes')}
             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-sm font-bold ${
               seccion === 'planes' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                ? 'bg-blue-600/90 text-white border border-blue-400/20 shadow-md shadow-black/40' 
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -442,12 +472,11 @@ export default function DashboardGerente() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl p-6 shadow-2xl relative overflow-hidden group"
+                    className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl p-6 shadow-xl relative overflow-hidden group"
                   >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-blue-600/20 transition-all"></div>
                     <div className="flex justify-between items-start mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-blue-600/10 flex items-center justify-center">
-                        <Users className="w-6 h-6 text-blue-600" />
+                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                        <Users className="w-6 h-6 text-blue-400" />
                       </div>
                     </div>
                     <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Aforo Actual</p>
@@ -459,12 +488,11 @@ export default function DashboardGerente() {
 
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                    className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl p-6 shadow-2xl relative overflow-hidden group"
+                    className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl p-6 shadow-xl relative overflow-hidden group"
                   >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-green-500/20 transition-all"></div>
                     <div className="flex justify-between items-start mb-4 relative z-10">
-                      <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-                        <DollarSign className="w-6 h-6 text-green-500" />
+                      <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                        <DollarSign className="w-6 h-6 text-green-400" />
                       </div>
                     </div>
                     <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1 relative z-10">Ingresos del Mes</p>
@@ -473,12 +501,11 @@ export default function DashboardGerente() {
 
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                    className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl p-6 shadow-2xl relative overflow-hidden group"
+                    className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all rounded-3xl p-6 shadow-xl relative overflow-hidden group"
                   >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-blue-500/20 transition-all"></div>
                     <div className="flex justify-between items-start mb-4 relative z-10">
-                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                        <TrendingUp className="w-6 h-6 text-blue-500" />
+                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                        <TrendingUp className="w-6 h-6 text-blue-400" />
                       </div>
                     </div>
                     <p className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1 relative z-10">Socios Activos</p>
@@ -648,7 +675,7 @@ export default function DashboardGerente() {
 
                   <button
                     onClick={abrirNuevoPlan}
-                    className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-sm uppercase tracking-wide transition shadow-lg shadow-blue-600/30 hover:scale-105"
+                    className="btn-primary flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider"
                   >
                     <Plus className="w-4 h-4" /> Nuevo Plan
                   </button>
@@ -681,57 +708,33 @@ export default function DashboardGerente() {
               {/* Filtros y Búsqueda */}
               <div className="bg-[#141414] border border-white/5 rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
                 {/* Duración */}
-                <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto">
-                  <button
-                    onClick={() => setFiltroPeriodo('TODOS')}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                      filtroPeriodo === 'TODOS'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    Todos
-                  </button>
-                  <button
-                    onClick={() => setFiltroPeriodo('30')}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                      filtroPeriodo === '30'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    Mensual (30d)
-                  </button>
-                  <button
-                    onClick={() => setFiltroPeriodo('90')}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                      filtroPeriodo === '90'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    Trimestral (90d)
-                  </button>
-                  <button
-                    onClick={() => setFiltroPeriodo('360')}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                      filtroPeriodo === '360'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    Anual (360d)
-                  </button>
-                  <button
-                    onClick={() => setFiltroPeriodo('otros')}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                      filtroPeriodo === 'otros'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    Otros
-                  </button>
+                <div className="flex flex-wrap items-center gap-1 p-1 bg-black/40 border border-white/5 rounded-2xl w-full md:w-auto relative">
+                  {[
+                    { id: 'TODOS', label: 'Todos' },
+                    { id: '30', label: 'Mensual (30d)' },
+                    { id: '90', label: 'Trimestral (90d)' },
+                    { id: '360', label: 'Anual (360d)' },
+                    { id: 'otros', label: 'Otros' }
+                  ].map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => setFiltroPeriodo(p.id)}
+                      className={`relative px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors z-10 ${
+                        filtroPeriodo === p.id
+                          ? 'text-white'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      {filtroPeriodo === p.id && (
+                        <motion.div
+                          layoutId="gerentePeriodoPill"
+                          transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
+                          className="absolute inset-0 bg-blue-600 rounded-xl shadow-md border border-blue-400/30 -z-10"
+                        />
+                      )}
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
@@ -894,14 +897,14 @@ export default function DashboardGerente() {
                         <div className="pt-4 border-t border-white/5 flex items-center gap-2">
                           <button
                             onClick={() => abrirEditarPlan(plan)}
-                            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 hover:text-white text-gray-300 rounded-xl text-xs font-bold transition border border-white/5"
+                            className="btn-secondary flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold"
                           >
                             <Edit2 className="w-3.5 h-3.5" /> Editar
                           </button>
 
                           <button
                             onClick={() => setModalEliminar(plan)}
-                            className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition border border-red-500/20"
+                            className="btn-icon p-2.5 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 hover:border-rose-500/30"
                             title="Eliminar o desactivar plan"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -924,10 +927,11 @@ export default function DashboardGerente() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setModalPlan(false)}></div>
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-[#141414] border border-white/10 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 shadow-2xl"
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-[#0e0e12] border border-white/10 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
             >
               {/* Modal Header */}
               <div className="px-8 py-5 border-b border-white/10 flex items-center justify-between">
@@ -1334,7 +1338,7 @@ export default function DashboardGerente() {
                   <button
                     type="button"
                     onClick={() => setModalPlan(false)}
-                    className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 font-bold rounded-xl text-xs uppercase tracking-wider transition"
+                    className="btn-secondary px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider"
                   >
                     Cancelar
                   </button>
@@ -1343,11 +1347,11 @@ export default function DashboardGerente() {
                     type="button"
                     onClick={guardarPlan}
                     disabled={guardando}
-                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-blue-600/30 flex items-center gap-2 disabled:opacity-50"
+                    className="btn-primary px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 disabled:opacity-50"
                   >
                     {guardando ? (
                       <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Guardando...
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin-fast" /> Guardando...
                       </>
                     ) : (
                       'Guardar Cambios'
@@ -1366,10 +1370,11 @@ export default function DashboardGerente() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setModalEliminar(null)}></div>
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#141414] border border-white/10 rounded-3xl w-full max-w-md p-6 relative z-10 shadow-2xl"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-[#0e0e12] border border-white/10 rounded-3xl w-full max-w-md p-6 relative z-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)]"
             >
               <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center mb-4">
                 <Trash2 className="w-6 h-6" />
@@ -1390,13 +1395,13 @@ export default function DashboardGerente() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setModalEliminar(null)}
-                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl font-bold text-xs uppercase tracking-wider transition"
+                  className="btn-secondary flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={confirmarEliminarPlan}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-black text-xs uppercase tracking-wider transition shadow-lg shadow-red-600/30"
+                  className="btn-danger flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-wider"
                 >
                   Confirmar
                 </button>

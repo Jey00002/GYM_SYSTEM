@@ -3,9 +3,11 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Lock, Mail, ArrowRight, User, CheckCircle2, AlertCircle, 
-  ShieldCheck, ArrowLeft, RefreshCw, Eye, EyeOff, Sparkles 
+  ShieldCheck, ArrowLeft, RefreshCw, Eye, EyeOff, Sparkles,
+  Dumbbell, ClipboardList, Crown, UserCheck
 } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
+import { toast } from 'sonner';
 import api from '../services/api';
 
 export default function Login() {
@@ -61,6 +63,7 @@ export default function Login() {
     const decoded = JSON.parse(atob(token.split('.')[1]));
     const rol = decoded.rol || 'SOCIO';
     localStorage.setItem('rol', rol);
+    toast.success('¡Sesión iniciada con éxito!');
 
     const pendiente = localStorage.getItem('planSeleccionado');
     if (pendiente) {
@@ -254,35 +257,51 @@ export default function Login() {
       </Link>
 
       <motion.div 
-        initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }} 
-        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} 
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md bg-black/50 backdrop-blur-2xl border border-white/10 p-8 sm:p-10 rounded-2xl shadow-[0_0_60px_rgba(0,0,0,0.7)] relative z-10"
+        initial={{ opacity: 0, y: 16, scale: 0.98 }} 
+        animate={{ opacity: 1, y: 0, scale: 1 }} 
+        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+        className="w-full max-w-md bg-[#0e0e12]/80 backdrop-blur-2xl border border-white/10 p-8 sm:p-10 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)] relative z-10"
       >
-        {/* Pestañas de Alternancia: Iniciar Sesión / Crear Cuenta */}
-        <div className="grid grid-cols-2 bg-white/5 p-1 rounded-xl border border-white/10 mb-8">
+        {/* Pestañas de Alternancia: Iniciar Sesión / Crear Cuenta con layoutId */}
+        <div className="grid grid-cols-2 bg-white/5 p-1 rounded-2xl border border-white/10 mb-8 relative">
           <button
             type="button"
             onClick={() => cambiarModo('login')}
-            className={`py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+            className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider relative transition-colors ${
               modo === 'login'
-                ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]'
+                ? 'text-white'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            Iniciar Sesión
+            {modo === 'login' && (
+              <motion.div
+                layoutId="modoTab"
+                transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
+                className="absolute inset-0 bg-blue-600 rounded-xl shadow-md border border-blue-400/30"
+              />
+            )}
+            <span className="relative z-10">Iniciar Sesión</span>
           </button>
           <button
             type="button"
             onClick={() => cambiarModo('registro')}
-            className={`py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+            className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider relative transition-colors flex items-center justify-center gap-1.5 ${
               modo === 'registro'
-                ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]'
+                ? 'text-white'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            Crear Cuenta
+            {modo === 'registro' && (
+              <motion.div
+                layoutId="modoTab"
+                transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
+                className="absolute inset-0 bg-blue-600 rounded-xl shadow-md border border-blue-400/30"
+              />
+            )}
+            <span className="relative z-10 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              Crear Cuenta
+            </span>
           </button>
         </div>
 
@@ -298,7 +317,7 @@ export default function Login() {
             >
               <div className="mb-8">
                 <h2 className="text-3xl sm:text-4xl font-black text-white mb-2 tracking-tighter uppercase">
-                  Acceso<br/><span className="text-blue-600">Autorizado</span>
+                  Acceso<br/><span className="text-blue-400">Autorizado</span>
                 </h2>
                 <p className="text-gray-400 text-xs tracking-[0.2em] uppercase">
                   Ingresa tus credenciales para continuar
@@ -318,7 +337,7 @@ export default function Login() {
                         if (correo) setRegCorreo(correo);
                         cambiarModo('registro');
                       }}
-                      className="mt-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-3 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition"
+                      className="mt-1 bg-blue-600/90 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition"
                     >
                       <Sparkles className="w-3.5 h-3.5" /> Crear cuenta con este correo
                     </button>
@@ -338,7 +357,7 @@ export default function Login() {
                       required 
                       value={correo}
                       onChange={(e) => setCorreo(e.target.value)}
-                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-blue-600 transition-colors"
+                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/60 transition-colors"
                       placeholder="ejemplo@gym.com"
                     />
                   </div>
@@ -355,7 +374,7 @@ export default function Login() {
                       required 
                       value={contrasena}
                       onChange={(e) => setContrasena(e.target.value)}
-                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 pl-12 pr-11 text-white placeholder-gray-600 focus:outline-none focus:border-blue-600 transition-colors"
+                      className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl py-3 pl-12 pr-11 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/60 transition-colors"
                       placeholder="••••••••"
                     />
                     <button
@@ -371,9 +390,19 @@ export default function Login() {
                 <button 
                   type="submit" 
                   disabled={cargando}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wide transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] disabled:opacity-50"
+                  className="w-full btn-primary py-3.5 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wide disabled:opacity-50"
                 >
-                  {cargando ? 'Procesando...' : 'Iniciar Sesión'} <ArrowRight className="w-5 h-5" />
+                  {cargando ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin-fast"></div>
+                      <span>Iniciando sesión...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Iniciar Sesión</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
                 </button>
               </form>
 
@@ -418,33 +447,53 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => { setCorreo('entrenador@gym.com'); setContrasena('123456'); }}
-                    className="bg-white/5 hover:bg-blue-600/20 hover:border-blue-500/40 border border-white/5 p-2 rounded-xl text-left transition group"
+                    className="bg-white/5 hover:bg-blue-600/20 hover:border-blue-500/40 border border-white/5 p-2.5 rounded-xl text-left transition group"
                   >
-                    <p className="text-xs font-bold text-white group-hover:text-blue-400">🏋️ Entrenador</p>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="p-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition">
+                        <Dumbbell className="w-3.5 h-3.5" />
+                      </span>
+                      <p className="text-xs font-bold text-white group-hover:text-blue-400">Entrenador</p>
+                    </div>
                     <p className="text-[10px] text-gray-500 truncate">entrenador@gym.com</p>
                   </button>
                   <button
                     type="button"
                     onClick={() => { setCorreo('recepcion@gym.com'); setContrasena('123456'); }}
-                    className="bg-white/5 hover:bg-blue-600/20 hover:border-blue-500/40 border border-white/5 p-2 rounded-xl text-left transition group"
+                    className="bg-white/5 hover:bg-emerald-600/20 hover:border-emerald-500/40 border border-white/5 p-2.5 rounded-xl text-left transition group"
                   >
-                    <p className="text-xs font-bold text-white group-hover:text-blue-400">📋 Recepción</p>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="p-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition">
+                        <ClipboardList className="w-3.5 h-3.5" />
+                      </span>
+                      <p className="text-xs font-bold text-white group-hover:text-emerald-400">Recepción</p>
+                    </div>
                     <p className="text-[10px] text-gray-500 truncate">recepcion@gym.com</p>
                   </button>
                   <button
                     type="button"
                     onClick={() => { setCorreo('gerente@gym.com'); setContrasena('123456'); }}
-                    className="bg-white/5 hover:bg-blue-600/20 hover:border-blue-500/40 border border-white/5 p-2 rounded-xl text-left transition group"
+                    className="bg-white/5 hover:bg-amber-600/20 hover:border-amber-500/40 border border-white/5 p-2.5 rounded-xl text-left transition group"
                   >
-                    <p className="text-xs font-bold text-white group-hover:text-blue-400">👑 Gerente</p>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="p-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 group-hover:bg-amber-500 group-hover:text-white transition">
+                        <Crown className="w-3.5 h-3.5" />
+                      </span>
+                      <p className="text-xs font-bold text-white group-hover:text-amber-400">Gerente</p>
+                    </div>
                     <p className="text-[10px] text-gray-500 truncate">gerente@gym.com</p>
                   </button>
                   <button
                     type="button"
                     onClick={() => { setCorreo('socio@gym.com'); setContrasena('123456'); }}
-                    className="bg-white/5 hover:bg-blue-600/20 hover:border-blue-500/40 border border-white/5 p-2 rounded-xl text-left transition group"
+                    className="bg-white/5 hover:bg-purple-600/20 hover:border-purple-500/40 border border-white/5 p-2.5 rounded-xl text-left transition group"
                   >
-                    <p className="text-xs font-bold text-white group-hover:text-blue-400">🏃 Socio</p>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="p-1 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 group-hover:bg-purple-500 group-hover:text-white transition">
+                        <UserCheck className="w-3.5 h-3.5" />
+                      </span>
+                      <p className="text-xs font-bold text-white group-hover:text-purple-400">Socio</p>
+                    </div>
                     <p className="text-[10px] text-gray-500 truncate">socio@gym.com</p>
                   </button>
                 </div>
@@ -615,9 +664,19 @@ export default function Login() {
                     <button 
                       type="submit" 
                       disabled={cargando || !esGmailValido(regCorreo) || regContrasena.length < 6 || regContrasena !== regConfirmarContrasena}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wide transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                      className="w-full btn-primary py-3.5 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                     >
-                      {cargando ? 'Generando código...' : 'Validar Correo Gmail'} <ArrowRight className="w-5 h-5" />
+                      {cargando ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin-fast"></div>
+                          <span>Generando código...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Validar Correo Gmail</span>
+                          <ArrowRight className="w-5 h-5" />
+                        </>
+                      )}
                     </button>
                   </form>
 
@@ -647,7 +706,7 @@ export default function Login() {
                     <button 
                       type="button" 
                       onClick={() => cambiarModo('login')} 
-                      className="text-white hover:text-blue-500 font-bold underline transition"
+                      className="text-white hover:text-blue-400 font-bold underline transition"
                     >
                       Inicia Sesión aquí
                     </button>
@@ -670,20 +729,20 @@ export default function Login() {
 
                   {/* Banner de código para demostración inmediata */}
                   {codigoDemoGenerado && (
-                    <div className="bg-gradient-to-r from-blue-950/80 to-blue-900/40 border border-blue-500/40 p-4 rounded-xl mb-5 flex items-center justify-between">
+                    <div className="bg-white/[0.03] border border-white/10 p-4 rounded-xl mb-5 flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] text-blue-300 font-black uppercase tracking-widest">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
                           Código de Validación Generado
                         </p>
                         <p className="text-2xl font-black text-white tracking-[0.3em] font-mono">
                           {codigoDemoGenerado}
                         </p>
-                        <p className="text-[10px] text-gray-400">Valida que eres el titular de {regCorreo}</p>
+                        <p className="text-[10px] text-gray-500">Valida que eres el titular de {regCorreo}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => setRegCodigo(codigoDemoGenerado)}
-                        className="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs px-3 py-2 rounded-lg transition uppercase tracking-wider"
+                        className="bg-blue-600/90 hover:bg-blue-600 text-white font-bold text-xs px-3 py-2 rounded-lg transition uppercase tracking-wider border border-blue-400/20"
                       >
                         Auto-llenar
                       </button>
@@ -702,7 +761,7 @@ export default function Login() {
                         autoFocus
                         value={regCodigo}
                         onChange={(e) => setRegCodigo(e.target.value.replace(/\D/g, ''))}
-                        className="w-full bg-[#0a0a0a] border-2 border-blue-500/50 focus:border-blue-500 rounded-xl py-4 text-center text-3xl font-black tracking-[0.4em] font-mono text-white focus:outline-none transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)]"
+                        className="w-full bg-[#0a0a0a] border border-white/20 focus:border-blue-500/70 rounded-xl py-4 text-center text-3xl font-black tracking-[0.4em] font-mono text-white focus:outline-none transition-all shadow-md shadow-black/40"
                         placeholder="••••••"
                       />
                       <p className="text-center text-xs text-gray-400 mt-2">
@@ -713,9 +772,19 @@ export default function Login() {
                     <button 
                       type="submit" 
                       disabled={cargando || regCodigo.length < 6}
-                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wide transition-all shadow-[0_0_20px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full btn-success py-4 rounded-xl flex items-center justify-center gap-2 uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_25px_rgba(16,185,129,0.35)]"
                     >
-                      {cargando ? 'Verificando y Creando...' : 'Confirmar y Crear Cuenta'} <ShieldCheck className="w-5 h-5" />
+                      {cargando ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin-fast"></div>
+                          <span>Verificando y Creando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Confirmar y Crear Cuenta</span>
+                          <ShieldCheck className="w-5 h-5" />
+                        </>
+                      )}
                     </button>
 
                     <div className="flex items-center justify-between pt-2">

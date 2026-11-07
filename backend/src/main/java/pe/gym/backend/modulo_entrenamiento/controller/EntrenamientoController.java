@@ -39,8 +39,11 @@ public class EntrenamientoController {
     }
 
     @GetMapping("/ejercicios")
-    public ResponseEntity<List<Ejercicio>> listarEjercicios() {
-        return ResponseEntity.ok(entrenamientoService.listarEjercicios());
+    public ResponseEntity<List<Ejercicio>> listarEjercicios(
+            @RequestParam(required = false) String grupoMuscular,
+            @RequestParam(required = false) String equipamiento,
+            @RequestParam(required = false) String busqueda) {
+        return ResponseEntity.ok(entrenamientoService.listarEjercicios(grupoMuscular, equipamiento, busqueda));
     }
 
     @PostMapping("/ejercicios")

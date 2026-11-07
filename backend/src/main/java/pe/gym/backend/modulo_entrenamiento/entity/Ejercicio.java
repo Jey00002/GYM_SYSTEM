@@ -14,15 +14,24 @@ public class Ejercicio {
     @Column(name = "id_ejercicio")
     private Long id;
 
-    @Column(name = "nombre_ejercicio", length = 100)
+    @Column(name = "nombre_ejercicio", length = 150)
     private String nombreEjercicio;
 
-    @Column(name = "descripcion", length = 255)
+    @Column(name = "descripcion", columnDefinition = "TEXT")
     private String descripcion;
 
     @Column(name = "grupo_muscular", length = 50)
     private String grupoMuscular;
 
-    @Column(name = "url_gif", length = 255)
+    @Column(name = "musculo_objetivo", length = 80)
+    private String musculoObjetivo;
+
+    @Column(name = "equipamiento", length = 80)
+    private String equipamiento;
+
+    @Column(name = "url_gif", columnDefinition = "TEXT")
     private String urlGif;
+
+    @Column(name = "url_imagen", columnDefinition = "TEXT")
+    private String urlImagen;
 }

@@ -44,16 +44,21 @@ public class TareasProgramadas {
         }
     }
 
-    // RN-02: Marcar como MOROSO si fecha_actual > fecha_vencimiento (Se ejecuta cada día a las 12 AM)
+    // RN-02: Marcar como INACTIVO si fecha_actual > fecha_vencimiento (Se ejecuta cada día a las 12 AM)
     @Scheduled(cron = "0 0 0 * * ?")
-    public void marcarMorosos() {
+    public void marcarInactivos() {
         LocalDate hoy = LocalDate.now();
         List<Membresia> vencidas = membresiaRepository.findByFechaVencimientoBeforeAndEstado(hoy, "ACTIVA");
         
         for (Membresia m : vencidas) {
-            m.setEstado("MOROSO");
+            m.setEstado("INACTIVO");
             membresiaRepository.save(m);
-            System.out.println("⚠️ Socio ID " + m.getSocio().getId() + " marcado como MOROSO");
+            System.out.println("⚠️ Socio ID " + m.getSocio().getId() + " marcado como INACTIVO");
         }
+    }
+
+    // Alias para compatibilidad
+    public void marcarMorosos() {
+        marcarInactivos();
     }
 }

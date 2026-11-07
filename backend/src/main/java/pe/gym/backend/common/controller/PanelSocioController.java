@@ -76,7 +76,11 @@ public class PanelSocioController {
         if (!membresias.isEmpty()) {
             Membresia m = membresias.stream().max(Comparator.comparing(Membresia::getFechaVencimiento)).get();
             Map<String, Object> mm = new LinkedHashMap<>();
-            mm.put("estado", m.getEstado());
+            String est = m.getEstado();
+            if ("MOROSO".equalsIgnoreCase(est)) {
+                est = "INACTIVO";
+            }
+            mm.put("estado", est);
             mm.put("fechaInicio", m.getFechaInicio().toString());
             mm.put("fechaVencimiento", m.getFechaVencimiento().toString());
             mm.put("plan", m.getPlanMembresia().getNombrePlan());
@@ -134,14 +138,20 @@ public class PanelSocioController {
                     ej.put("nombreEjercicio", ejEntity.getNombreEjercicio());
                     ej.put("descripcion", ejEntity.getDescripcion() != null ? ejEntity.getDescripcion() : "");
                     ej.put("grupoMuscular", ejEntity.getGrupoMuscular() != null ? ejEntity.getGrupoMuscular() : "");
+                    ej.put("musculoObjetivo", ejEntity.getMusculoObjetivo() != null ? ejEntity.getMusculoObjetivo() : "");
+                    ej.put("equipamiento", ejEntity.getEquipamiento() != null ? ejEntity.getEquipamiento() : "");
                     ej.put("urlGif", ejEntity.getUrlGif() != null ? ejEntity.getUrlGif() : "");
+                    ej.put("urlImagen", ejEntity.getUrlImagen() != null ? ejEntity.getUrlImagen() : "");
 
                     Map<String, Object> ejSubMap = new LinkedHashMap<>();
                     ejSubMap.put("id", ejEntity.getId());
                     ejSubMap.put("nombreEjercicio", ejEntity.getNombreEjercicio());
                     ejSubMap.put("descripcion", ejEntity.getDescripcion() != null ? ejEntity.getDescripcion() : "");
                     ejSubMap.put("grupoMuscular", ejEntity.getGrupoMuscular() != null ? ejEntity.getGrupoMuscular() : "");
+                    ejSubMap.put("musculoObjetivo", ejEntity.getMusculoObjetivo() != null ? ejEntity.getMusculoObjetivo() : "");
+                    ejSubMap.put("equipamiento", ejEntity.getEquipamiento() != null ? ejEntity.getEquipamiento() : "");
                     ejSubMap.put("urlGif", ejEntity.getUrlGif() != null ? ejEntity.getUrlGif() : "");
+                    ejSubMap.put("urlImagen", ejEntity.getUrlImagen() != null ? ejEntity.getUrlImagen() : "");
                     ej.put("ejercicio", ejSubMap);
                 }
                 ejs.add(ej);

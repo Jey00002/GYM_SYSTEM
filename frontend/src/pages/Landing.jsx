@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Check, Trophy, ArrowRight, User, LogOut, ChevronDown, Smartphone } from 'lucide-react';
+import { Menu, X, Check, Trophy, ArrowRight, User, LogOut, ChevronDown, Smartphone, Sparkles } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
+import { toast } from 'sonner';
 import api from '../services/api';
 
 import heroImg from '../assets/hero.png';
@@ -18,7 +19,7 @@ const NIVELES = [
     key: 'basico',
     nombre: 'Plan Básico',
     badge: 'Esencial',
-    color: '#2563eb',
+    color: '#1e3a8a',
     beneficios: [
       'Acceso ilimitado a máquinas',
       'Acceso a vestidores y duchas'
@@ -86,7 +87,7 @@ const parseBeneficios = (plan, fallbackNivel) => {
 const resolverNivel = (plan) => {
   const nivelBase = obtenerNivel(plan.nombrePlan);
   const beneficios = parseBeneficios(plan, nivelBase);
-  const color = plan.color || nivelBase?.color || '#2563eb';
+  const color = plan.color || nivelBase?.color || '#1e3a8a';
   const badge = plan.badge || nivelBase?.badge || 'Exclusivo';
   const nombre = plan.nombrePlan || nivelBase?.nombre || 'Plan GymStar';
 
@@ -145,15 +146,53 @@ export default function Landing() {
   const rol = localStorage.getItem('rol');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setLoadingPlanes(true);
-    api.get('/planes').then(r => {
-      setPlanes(r.data);
-    }).catch(e => {
+  const cargarPlanes = useCallback(async () => {
+    try {
+      const r = await api.get('/planes');
+      if (Array.isArray(r.data)) {
+        setPlanes(r.data);
+      }
+    } catch (e) {
       console.error("Error cargando planes", e);
-    }).finally(() => {
+    } finally {
       setLoadingPlanes(false);
-    });
+    }
+  }, []);
+
+  useEffect(() => {
+    cargarPlanes();
+
+    let channel = null;
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        channel = new BroadcastChannel('gym_planes_channel');
+        channel.onmessage = (event) => {
+          if (event?.data?.action === 'RELOAD_PLANES' || event?.data?.timestamp) {
+            cargarPlanes();
+          }
+        };
+      }
+    } catch (e) {
+      // Fallback
+    }
+
+    const handlePlanesEvent = () => cargarPlanes();
+    const handleStorage = (e) => {
+      if (e.key === 'gym_planes_updated_at') {
+        cargarPlanes();
+      }
+    };
+    const handleFocus = () => cargarPlanes();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        cargarPlanes();
+      }
+    };
+
+    window.addEventListener('planes-actualizados', handlePlanesEvent);
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
 
     const pendiente = localStorage.getItem('planSeleccionado');
     if (pendiente && token) {
@@ -162,8 +201,20 @@ export default function Landing() {
 
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [token]);
+
+    return () => {
+      if (channel) {
+        try {
+          channel.close();
+        } catch (e) {}
+      }
+      window.removeEventListener('planes-actualizados', handlePlanesEvent);
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [token, cargarPlanes]);
 
   const cerrarSesion = () => {
     localStorage.removeItem('token');
@@ -197,6 +248,7 @@ export default function Landing() {
       const userRol = decoded.rol || 'SOCIO';
       localStorage.setItem('rol', userRol);
 
+      toast.success(`¡Bienvenido, ${requestData.nombre}!`);
       setModalRegistro(false);
       
       const pendiente = localStorage.getItem('planSeleccionado');
@@ -254,19 +306,22 @@ export default function Landing() {
         metodoPago: 'YAPE',
         transactionId: `YAPE-${Date.now()}`
       });
+      toast.success('¡Pago registrado con éxito!');
       setPaso('exito');
     } catch (e) {
-      setErrorPago(e.response?.data?.message || 'Error al procesar el pago.');
+      const msg = e.response?.data?.message || 'Error al procesar el pago.';
+      setErrorPago(msg);
+      toast.error(msg);
     } finally {
       setCargando(false);
     }
   };
 
   const anim = (delay = 0) => ({
-    initial: { opacity: 0, y: 30 },
+    initial: { opacity: 0, y: 20 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-100px" },
-    transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }
+    viewport: { once: true, margin: "-50px" },
+    transition: { duration: 0.35, delay, ease: [0.23, 1, 0.32, 1] }
   });
 
   const getDashboardRoute = () => {
@@ -317,10 +372,10 @@ export default function Landing() {
               </div>
             ) : (
               <div className="flex gap-4">
-                <Link to="/login" className="px-5 py-2.5 rounded-full hover:bg-white/5 transition border border-transparent hover:border-white/10">
+                <Link to="/login" className="btn-secondary px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center">
                   INICIAR SESIÓN
                 </Link>
-                <button onClick={() => setModalRegistro(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.3)] transition">
+                <button onClick={() => setModalRegistro(true)} className="btn-primary px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider">
                   UNIRSE AHORA
                 </button>
               </div>
@@ -342,13 +397,13 @@ export default function Landing() {
               <hr className="border-white/10" />
               {token ? (
                 <>
-                  <Link to={getDashboardRoute()} className="text-blue-600">MI PANEL</Link>
+                  <Link to={getDashboardRoute()} className="text-blue-400">MI PANEL</Link>
                   <button onClick={cerrarSesion} className="text-left text-red-500">CERRAR SESIÓN</button>
                 </>
               ) : (
                 <>
                   <Link to="/login">INICIAR SESIÓN</Link>
-                  <button onClick={() => {setMenuOpen(false); setModalRegistro(true);}} className="text-left text-blue-600">UNIRSE AHORA</button>
+                  <button onClick={() => {setMenuOpen(false); setModalRegistro(true);}} className="text-left text-blue-400">UNIRSE AHORA</button>
                 </>
               )}
             </div>
@@ -364,21 +419,21 @@ export default function Landing() {
         </div>
         <div className="max-w-7xl mx-auto px-6 relative z-10 w-full">
           <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 border border-blue-600/20 text-blue-600 text-xs font-bold uppercase tracking-widest mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-6">
               Gimnasio Premium 24/7
             </div>
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-6 tracking-tighter">
               SIN EXCUSAS<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-yellow-500">SOLO RESULTADOS</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-amber-300">SOLO RESULTADOS</span>
             </h1>
             <p className="text-lg text-gray-400 mb-10 max-w-lg">
               Transforma tu cuerpo y tu mente con equipos de última generación, los mejores entrenadores y acceso mediante tu app móvil.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <a href="#planes" className="bg-blue-600 hover:bg-blue-700 text-white font-black px-8 py-4 rounded-xl text-center uppercase tracking-wide transition-all hover:scale-105 shadow-[0_0_30px_rgba(37,99,235,0.4)]">
-                Ver Planes
+              <a href="#planes" className="btn-primary px-8 py-4 rounded-xl text-center uppercase tracking-wide flex items-center justify-center gap-2">
+                Ver Planes <ArrowRight className="w-4 h-4" />
               </a>
-              <button onClick={() => !token ? setModalRegistro(true) : navigate(getDashboardRoute())} className="bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-xl text-center transition-all border border-white/10 flex items-center justify-center gap-2">
+              <button onClick={() => !token ? setModalRegistro(true) : navigate(getDashboardRoute())} className="btn-secondary px-8 py-4 rounded-xl text-center flex items-center justify-center gap-2">
                 {token ? 'Ir a mi Panel' : 'Prueba Gratis 1 Día'}
               </button>
             </div>
@@ -420,30 +475,42 @@ export default function Landing() {
 
             return (
               <>
-                <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-16">
-                  <button
-                    onClick={() => setFiltroPeriodo('TODOS')}
-                    className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 ${
-                      filtroPeriodo === 'TODOS'
-                        ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105'
-                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10'
-                    }`}
-                  >
-                    ✨ Todos los Periodos
-                  </button>
-                  {duracionesDisponibles.map(d => (
+                <div className="flex justify-center mb-16">
+                  <div className="inline-flex flex-wrap items-center justify-center gap-1.5 p-1.5 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.08)]">
                     <button
-                      key={d.id}
-                      onClick={() => setFiltroPeriodo(d.id)}
-                      className={`px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 ${
-                        filtroPeriodo === d.id
-                          ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105'
-                          : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10'
+                      onClick={() => setFiltroPeriodo('TODOS')}
+                      className={`relative px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors z-10 ${
+                        filtroPeriodo === 'TODOS' ? 'text-white' : 'text-gray-400 hover:text-white'
                       }`}
                     >
-                      {d.etiqueta}
+                      {filtroPeriodo === 'TODOS' && (
+                        <motion.div
+                          layoutId="periodoPill"
+                          transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
+                          className="absolute inset-0 bg-gradient-to-b from-blue-500 to-blue-700 rounded-full shadow-lg shadow-blue-600/30 border border-blue-400/30 -z-10"
+                        />
+                      )}
+                      Todos los Periodos
                     </button>
-                  ))}
+                    {duracionesDisponibles.map(d => (
+                      <button
+                        key={d.id}
+                        onClick={() => setFiltroPeriodo(d.id)}
+                        className={`relative px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors z-10 ${
+                          filtroPeriodo === d.id ? 'text-white' : 'text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        {filtroPeriodo === d.id && (
+                          <motion.div
+                            layoutId="periodoPill"
+                            transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
+                            className="absolute inset-0 bg-gradient-to-b from-blue-500 to-blue-700 rounded-full shadow-lg shadow-blue-600/30 border border-blue-400/30 -z-10"
+                          />
+                        )}
+                        {d.etiqueta}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {loadingPlanes ? (
@@ -482,11 +549,12 @@ export default function Landing() {
                                   <motion.div
                                     layout
                                     key={plan.id || `${plan.nivel.key}-${duracion.id}`}
-                                    initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                                    initial={{ opacity: 0, scale: 0.96, y: 16 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.9, y: -30 }}
-                                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 }}
-                                    className={`relative rounded-[2rem] p-[1px] group ${esDiamante ? 'lg:scale-105 z-10' : 'z-0'}`}
+                                    exit={{ opacity: 0, scale: 0.96, y: -16 }}
+                                    whileHover={{ y: -4, transition: { duration: 0.18, ease: [0.23, 1, 0.32, 1] } }}
+                                    transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1], delay: i * 0.04 }}
+                                    className={`relative rounded-[2rem] p-[1px] group transition-shadow ${esDiamante ? 'lg:scale-105 z-10 shadow-2xl shadow-purple-950/30' : 'z-0 hover:shadow-xl'}`}
                                     style={{ 
                                       background: esDiamante 
                                         ? `linear-gradient(135deg, ${discColor}, rgba(168, 85, 247, 0.3) 50%, transparent 80%)` 
@@ -552,11 +620,16 @@ export default function Landing() {
 
                                       <button
                                         onClick={() => abrirPago(plan)}
-                                        className="mt-8 w-full py-3.5 rounded-xl font-black uppercase tracking-[0.12em] text-xs transition-all duration-300 hover:shadow-[0_0_25px_rgba(37,99,235,0.35)] hover:-translate-y-0.5"
+                                        className="mt-8 w-full py-3.5 rounded-xl font-black uppercase tracking-[0.14em] text-xs transition-all duration-150 border active:scale-[0.97]"
                                         style={{
-                                          backgroundColor: esDiamante ? discColor : esDorado ? '#eab308' : (plan.nivel.color || '#2563eb'),
-                                          color: esDorado ? '#000000' : '#ffffff',
-                                          fontWeight: 900
+                                          background: esDiamante 
+                                            ? 'linear-gradient(180deg, #c084fc 0%, #9333ea 100%)' 
+                                            : esDorado 
+                                            ? 'linear-gradient(180deg, #fde047 0%, #ca8a04 100%)' 
+                                            : 'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%)',
+                                          color: esDorado ? '#18181b' : '#ffffff',
+                                          borderColor: 'rgba(255, 255, 255, 0.25)',
+                                          boxShadow: `inset 0 1px 0 0 rgba(255, 255, 255, 0.35), 0 8px 24px -4px ${discColor}60`
                                         }}
                                       >
                                         Adquirir {plan.nivel.nombre}
@@ -584,8 +657,7 @@ export default function Landing() {
       </section>
 
       <footer className="bg-[#020202] py-24 border-t border-white/5 relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[1px] bg-gradient-to-r from-transparent via-blue-600/50 to-transparent"></div>
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/5 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
         
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-12 lg:gap-8">
@@ -651,8 +723,14 @@ export default function Landing() {
       <AnimatePresence>
       {modalRegistro && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setModalRegistro(false)}></div>
-          <motion.div initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }} animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }} transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }} className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl w-full max-w-lg p-10 relative shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setModalRegistro(false)}></div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.96, y: 8 }} 
+            animate={{ opacity: 1, scale: 1, y: 0 }} 
+            exit={{ opacity: 0, scale: 0.96, y: 8 }} 
+            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }} 
+            className="bg-black/70 backdrop-blur-2xl border border-white/10 rounded-2xl w-full max-w-lg p-8 sm:p-10 relative shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_0_1px_0_0_rgba(255,255,255,0.1)] overflow-hidden"
+          >
             {/* Elemento decorativo cinemático */}
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-15 mix-blend-overlay pointer-events-none"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none"></div>
@@ -701,8 +779,14 @@ export default function Landing() {
 
       <AnimatePresence>
       {planPago && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-[#141414] border border-white/10 rounded-3xl w-full max-w-md p-8 relative">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.96, y: 8 }} 
+            animate={{ opacity: 1, scale: 1, y: 0 }} 
+            exit={{ opacity: 0, scale: 0.96, y: 8 }} 
+            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }} 
+            className="bg-[#121216] border border-white/10 rounded-3xl w-full max-w-md p-8 relative shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.1)]"
+          >
             <button onClick={cerrarPago} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
               <X className="w-5 h-5" />
             </button>
@@ -718,7 +802,7 @@ export default function Landing() {
               <div className="py-10 text-center">
                 <h3 className="font-black tracking-tighter text-2xl mb-3">COMPLETA TU PERFIL</h3>
                 <p className="text-gray-400 text-sm mb-8">Para poder realizar tu compra, es necesario que completes tu perfil ingresando tu DNI en el apartado de tus datos.</p>
-                <button onClick={() => { cerrarPago(); navigate('/socio'); }} className="bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl px-8 py-4 w-full transition-all uppercase">
+                <button onClick={() => { cerrarPago(); navigate('/socio'); }} className="btn-primary rounded-xl px-8 py-3.5 w-full uppercase tracking-wider text-xs">
                   Ir a Mis Datos
                 </button>
               </div>
@@ -728,10 +812,10 @@ export default function Landing() {
               <>
                 <h3 className="font-black tracking-tighter text-2xl mb-1">PAGO CON YAPE</h3>
                 <p className="text-gray-500 text-sm mb-6">
-                  Plan <span className="text-white font-bold">{planPago.nombrePlan}</span> · <span className="text-blue-600 font-black">S/ {Number(planPago.tarifa)}</span>
+                  Plan <span className="text-white font-bold">{planPago.nombrePlan}</span> · <span className="text-blue-500 font-black">S/ {Number(planPago.tarifa)}</span>
                 </p>
                 <div className="bg-purple-900/30 border-2 border-purple-500/40 rounded-2xl p-6 mb-6 flex items-center gap-5">
-                  <div className="w-16 h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                  <div className="w-16 h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-900/50">
                     <Smartphone className="w-8 h-8" />
                   </div>
                   <div>
@@ -740,39 +824,57 @@ export default function Landing() {
                     <p className="text-purple-400 text-xs font-semibold">GYM STAR S.A.C.</p>
                   </div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-5 mb-6">
+                <div className="bg-white/5 rounded-xl p-5 mb-6 border border-white/5">
                   <p className="font-bold text-sm mb-3 text-gray-300">Instrucciones:</p>
                   <ol className="list-decimal list-inside space-y-2 text-gray-400 text-sm">
                     <li>Abre tu app de <span className="text-purple-400 font-bold">Yape</span></li>
                     <li>Yapea <span className="text-white font-bold">S/ {Number(planPago.tarifa)}</span> al número indicado</li>
                     <li>Referencia: <span className="font-mono text-white">GYM-{planPago.id}</span></li>
-                    <li>Presiona <span className="text-blue-600 font-bold">"Ya realicé el pago"</span></li>
+                    <li>Presiona <span className="text-purple-400 font-bold">"Ya realicé el pago"</span></li>
                   </ol>
                 </div>
                 {errorPago && (
                   <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm mb-4">{errorPago}</div>
                 )}
                 <div className="flex gap-3">
-                  <button onClick={cerrarPago} className="flex-1 py-4 bg-white/10 hover:bg-white/15 rounded-xl font-bold transition">Cancelar</button>
-                  <button onClick={confirmarPago} disabled={cargando} className="flex-1 py-4 bg-purple-600 hover:bg-purple-700 rounded-xl font-black uppercase transition-all disabled:opacity-50">
-                    {cargando ? 'Procesando...' : 'Ya realicé el pago'}
+                  <button onClick={cerrarPago} className="btn-secondary flex-1 py-3.5 rounded-xl font-bold uppercase text-xs tracking-wider">Cancelar</button>
+                  <button 
+                    onClick={confirmarPago} 
+                    disabled={cargando} 
+                    className="btn-primary flex-1 py-3.5 rounded-xl font-black uppercase text-xs tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
+                    style={{
+                      background: 'linear-gradient(180deg, #a855f7 0%, #7e22ce 100%)',
+                      boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 0 6px 20px -2px rgba(168, 85, 247, 0.5)'
+                    }}
+                  >
+                    {cargando ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin-fast"></div>
+                        <span>Procesando...</span>
+                      </>
+                    ) : 'Ya realicé el pago'}
                   </button>
                 </div>
               </>
             )}
 
             {paso === 'exito' && (
-              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="py-10 text-center">
-                <div className="w-20 h-20 rounded-full bg-green-500/10 text-green-500 mx-auto flex items-center justify-center mb-5">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.96 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }} 
+                className="py-10 text-center"
+              >
+                <div className="w-20 h-20 rounded-full bg-emerald-500/10 text-emerald-400 mx-auto flex items-center justify-center mb-5 border border-emerald-500/20 shadow-[0_0_25px_rgba(16,185,129,0.2)]">
                   <Check className="w-10 h-10" strokeWidth={3} />
                 </div>
                 <h3 className="font-black tracking-tighter text-2xl mb-3">¡PAGO REGISTRADO!</h3>
                 <p className="text-gray-400 text-sm mb-8">
-                  Tu membresía <span className="text-white font-bold">{planPago.nombrePlan}</span> ha sido activada.
+                  Tu membresía <span className="text-white font-bold">{planPago.nombrePlan}</span> ha sido activada con éxito.
                 </p>
                 <div className="flex gap-3">
-                  <button onClick={cerrarPago} className="flex-1 py-4 bg-white/10 hover:bg-white/15 rounded-xl font-bold transition">Seguir navegando</button>
-                  <button onClick={() => { cerrarPago(); navigate('/socio'); }} className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl font-black uppercase transition-all">
+                  <button onClick={cerrarPago} className="btn-secondary flex-1 py-3.5 rounded-xl font-bold uppercase text-xs tracking-wider">Seguir navegando</button>
+                  <button onClick={() => { cerrarPago(); navigate('/socio'); }} className="btn-primary flex-1 py-3.5 rounded-xl font-black uppercase text-xs tracking-wider">
                     Ir a mi panel
                   </button>
                 </div>

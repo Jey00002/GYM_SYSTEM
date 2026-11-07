@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import { Toaster } from 'sonner'
 import { GOOGLE_CLIENT_ID } from './config'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -23,6 +24,23 @@ const ProtectedRoute = ({ children, roles }) => {
 function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <Toaster 
+        theme="dark" 
+        position="bottom-right" 
+        richColors 
+        closeButton
+        toastOptions={{
+          style: {
+            background: 'rgba(15, 15, 20, 0.92)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',
+            borderRadius: '16px',
+            color: '#f4f4f5',
+            fontFamily: 'inherit'
+          }
+        }}
+      />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />

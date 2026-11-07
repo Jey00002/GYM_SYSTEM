@@ -23,6 +23,7 @@ import pe.gym.backend.modulo_seguridad.repository.UsuarioRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -121,7 +122,7 @@ public class DataInitializer implements CommandLineRunner {
         List<PlanMembresia> existentes = planRepository.findAll();
         if (existentes.isEmpty()) {
             List<String[]> planesDeseados = List.of(
-                    new String[]{"Plan Básico Mensual", "30", "80.00", "basico", "Esencial", "#2563eb", "Acceso flexible mensual a sala de pesas y cardio", "[\"Acceso ilimitado a máquinas\",\"Acceso a vestidores y duchas\"]"},
+                    new String[]{"Plan Básico Mensual", "30", "80.00", "basico", "Esencial", "#1e3a8a", "Acceso flexible mensual a sala de pesas y cardio", "[\"Acceso ilimitado a máquinas\",\"Acceso a vestidores y duchas\"]"},
                     new String[]{"Plan Dorado Mensual", "30", "120.00", "dorado", "Recomendado", "#eab308", "Plan completo con asesoramiento y rutinas", "[\"Acceso ilimitado a máquinas\",\"Acceso a vestidores y duchas\",\"Evaluación física inicial y mensual\",\"Rutina digital o física personalizada\"]"},
                     new String[]{"Plan Diamante Mensual", "30", "180.00", "diamante", "VIP Todo Incluido", "#a855f7", "Acceso ilimitado total con entrenador personal", "[\"Acceso ilimitado a máquinas\",\"Acceso a vestidores y duchas\",\"Evaluación física inicial y mensual\",\"Rutina digital o física personalizada\",\"Acceso a talleres de bailes\",\"Entrenador que te acompaña en toda la sesión de entrenamiento\"]"},
                     new String[]{"Plan Básico Trimestral", "90", "210.00", "basico", "Esencial", "#2563eb", "Ahorro trimestral para tu constancia", "[\"Acceso ilimitado a máquinas\",\"Acceso a vestidores y duchas\"]"},
@@ -197,6 +198,61 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void sembrarEjercicios() {
+        if (ejercicioRepository.count() >= 100) {
+            return;
+        }
+
+        try {
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.ClassPathResource("data/exercises.json");
+            if (resource.exists()) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(resource.getInputStream());
+                if (root.isArray()) {
+                    String cdnBase = "https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@main/";
+                    List<Ejercicio> nuevos = new ArrayList<>();
+                    for (com.fasterxml.jackson.databind.JsonNode node : root) {
+                        String rawName = node.path("name").asText("");
+                        if (rawName.isBlank()) continue;
+                        String titleName = toTitleCase(rawName);
+
+                        Ejercicio e = new Ejercicio();
+                        e.setNombreEjercicio(titleName);
+
+                        String descEs = node.path("instructions").path("es").asText("");
+                        if (descEs.isBlank()) {
+                            descEs = node.path("instructions").path("en").asText("");
+                        }
+                        e.setDescripcion(descEs);
+
+                        String bp = node.path("body_part").asText("");
+                        e.setGrupoMuscular(traducirGrupoMuscular(bp));
+
+                        String target = node.path("target").asText("");
+                        e.setMusculoObjetivo(traducirTarget(target));
+
+                        String equip = node.path("equipment").asText("");
+                        e.setEquipamiento(traducirEquipamiento(equip));
+
+                        String gif = node.path("gif_url").asText("");
+                        if (!gif.isBlank()) {
+                            e.setUrlGif(cdnBase + gif);
+                        }
+
+                        String img = node.path("image").asText("");
+                        if (!img.isBlank()) {
+                            e.setUrlImagen(cdnBase + img);
+                        }
+
+                        nuevos.add(e);
+                    }
+                    ejercicioRepository.saveAll(nuevos);
+                    return;
+                }
+            }
+        } catch (Exception ex) {
+            System.err.println("Advertencia al cargar dataset de ejercicios: " + ex.getMessage());
+        }
+
         String[][] datos = {
             {"Sentadilla", "Flexión profunda de rodillas con barra para cuádriceps y glúteos", "Piernas"},
             {"Press de Banca", "Empuje horizontal con barra para pectoral mayor y tríceps", "Pecho"},
@@ -222,6 +278,88 @@ public class DataInitializer implements CommandLineRunner {
                 ejercicioRepository.save(e);
             }
         }
+    }
+
+    private String toTitleCase(String text) {
+        if (text == null || text.isBlank()) return text;
+        String[] words = text.split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (String w : words) {
+            if (w.isEmpty()) continue;
+            sb.append(Character.toUpperCase(w.charAt(0)));
+            if (w.length() > 1) {
+                sb.append(w.substring(1).toLowerCase());
+            }
+            sb.append(" ");
+        }
+        return sb.toString().trim();
+    }
+
+    private String traducirGrupoMuscular(String bodyPart) {
+        if (bodyPart == null) return "General";
+        return switch (bodyPart.toLowerCase().trim()) {
+            case "chest" -> "Pecho";
+            case "back" -> "Espalda";
+            case "upper legs", "lower legs" -> "Piernas";
+            case "upper arms", "lower arms" -> "Brazos";
+            case "shoulders" -> "Hombros";
+            case "waist" -> "Abdomen";
+            case "cardio" -> "Cardio";
+            case "neck" -> "Cuello";
+            default -> "General";
+        };
+    }
+
+    private String traducirTarget(String target) {
+        if (target == null) return "";
+        return switch (target.toLowerCase().trim()) {
+            case "abs" -> "Abdominales";
+            case "pectorals" -> "Pectorales";
+            case "biceps" -> "Bíceps";
+            case "triceps" -> "Tríceps";
+            case "delts" -> "Deltoides";
+            case "quads" -> "Cuádriceps";
+            case "hamstrings" -> "Isquiotibiales";
+            case "glutes" -> "Glúteos";
+            case "calves" -> "Pantorrillas";
+            case "lats" -> "Dorsales";
+            case "upper back" -> "Espalda Alta";
+            case "traps" -> "Trapecios";
+            case "forearms" -> "Antebrazos";
+            case "spine" -> "Lumbares";
+            case "cardiovascular system" -> "Cardiovascular";
+            case "abductors" -> "Abductores";
+            case "adductors" -> "Aductores";
+            case "serratus anterior" -> "Serratos";
+            case "levator scapulae" -> "Cuello";
+            default -> target;
+        };
+    }
+
+    private String traducirEquipamiento(String equip) {
+        if (equip == null) return "";
+        return switch (equip.toLowerCase().trim()) {
+            case "body weight" -> "Peso Corporal";
+            case "barbell", "olympic barbell" -> "Barra Olímpica";
+            case "ez barbell" -> "Barra Z";
+            case "trap bar" -> "Barra Hexagonal";
+            case "dumbbell" -> "Mancuernas";
+            case "cable" -> "Polea";
+            case "machine", "leverage machine", "smith machine", "sled machine" -> "Máquina";
+            case "kettlebell" -> "Kettlebell";
+            case "band", "resistance band" -> "Banda Elástica";
+            case "medicine ball" -> "Balón Medicinal";
+            case "stability ball", "bosu ball" -> "Fitball / Bosu";
+            case "wheel roller", "roller" -> "Rodillo Abdominal";
+            case "rope" -> "Cuerda";
+            case "assisted" -> "Máquina Asistida";
+            case "stationary bike" -> "Bicicleta Estática";
+            case "elliptical machine" -> "Elíptica";
+            case "skierg machine" -> "SkiErg";
+            case "stepmill machine" -> "Escaladora";
+            case "weighted" -> "Con Lastre";
+            default -> equip;
+        };
     }
 
     private void sembrarUsuariosYPerfiles() {

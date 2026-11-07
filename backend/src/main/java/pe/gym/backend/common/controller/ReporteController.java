@@ -33,15 +33,17 @@ public class ReporteController {
     @PreAuthorize("hasAnyRole('GERENTE','ADMIN')")
     public ResponseEntity<Map<String, Object>> dashboard() {
         long activos = membresiaRepository.countByEstado("ACTIVA");
-        long morosos = membresiaRepository.countByEstado("MOROSO");
+        long inactivos = membresiaRepository.countByEstado("INACTIVO") + membresiaRepository.countByEstado("MOROSO");
         long total = membresiaRepository.count();
-        BigDecimal morosidad = total == 0 ? BigDecimal.ZERO
-                : BigDecimal.valueOf(morosos * 100.0 / total).setScale(1, RoundingMode.HALF_UP);
+        BigDecimal inactividad = total == 0 ? BigDecimal.ZERO
+                : BigDecimal.valueOf(inactivos * 100.0 / total).setScale(1, RoundingMode.HALF_UP);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("ingresosMensuales", pagoRepository.ingresosTotales());
         data.put("sociosActivos", activos);
-        data.put("morosidad_pct", morosidad);
+        data.put("sociosInactivos", inactivos);
+        data.put("inactividad_pct", inactividad);
+        data.put("morosidad_pct", inactividad); // retrocompatibilidad
         data.put("aforoActual", accesoService.obtenerAforoActual());
         data.put("aforoMaximo", 100);
         
@@ -68,13 +70,22 @@ public class ReporteController {
     @GetMapping("/membresias-estado")
     @PreAuthorize("hasAnyRole('GERENTE','ADMIN')")
     public ResponseEntity<List<Map<String, Object>>> membresiasEstado() {
-        List<Map<String, Object>> result = new ArrayList<>();
+        Map<String, Long> acumulado = new LinkedHashMap<>();
         for (Object[] fila : membresiaRepository.conteoPorEstado()) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("estado", String.valueOf(fila[0]));
-            m.put("total", fila[1]);
-            result.add(m);
+            String estado = String.valueOf(fila[0]);
+            if ("MOROSO".equalsIgnoreCase(estado)) {
+                estado = "INACTIVO";
+            }
+            long total = ((Number) fila[1]).longValue();
+            acumulado.put(estado, acumulado.getOrDefault(estado, 0L) + total);
         }
+        List<Map<String, Object>> result = new ArrayList<>();
+        acumulado.forEach((estado, total) -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("estado", estado);
+            m.put("total", total);
+            result.add(m);
+        });
         return ResponseEntity.ok(result);
     }
 

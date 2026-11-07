@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { 
   Users, Search, ScanLine, LogOut, CheckCircle, Trash2, 
   AlertTriangle, Fingerprint, Plus, Edit2, CreditCard, X, 
@@ -90,6 +91,11 @@ export default function Recepcion() {
 
   const mostrarMensaje = (tipo, mensaje) => {
     setResultadoAcceso({ tipo, mensaje });
+    if (tipo === 'AUTORIZADO') {
+      toast.success(mensaje);
+    } else {
+      toast.error(mensaje);
+    }
     setTimeout(() => setResultadoAcceso(null), 3500);
   };
 
@@ -288,7 +294,7 @@ export default function Recepcion() {
     if (!matchTerm) return false;
 
     if (filtroEstado === 'ACTIVA') return s.estadoMembresia === 'ACTIVA';
-    if (filtroEstado === 'VENCIDA') return s.estadoMembresia === 'VENCIDA' || s.estadoMembresia === 'MOROSO';
+    if (filtroEstado === 'VENCIDA') return s.estadoMembresia === 'VENCIDA' || s.estadoMembresia === 'MOROSO' || s.estadoMembresia === 'INACTIVO';
     if (filtroEstado === 'SIN_MEMBRESIA') return !s.estadoMembresia || s.estadoMembresia === 'SIN_MEMBRESIA';
     return true;
   });
@@ -370,14 +376,14 @@ export default function Recepcion() {
 
             <button 
               onClick={abrirModalNuevo}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-3.5 rounded-xl uppercase tracking-wider text-xs flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all"
+              className="btn-primary px-6 py-3.5 rounded-xl uppercase tracking-wider text-xs flex items-center gap-2"
             >
               <Plus className="w-4 h-4" /> Nuevo Cliente
             </button>
           </div>
 
           {/* Barra de Filtro y Búsqueda */}
-          <div className="bg-[#0f0f0f] border border-white/5 rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between shadow-xl">
+          <div className="bg-[#0e0e12]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between shadow-[0_15px_35px_-10px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input 
@@ -385,27 +391,34 @@ export default function Recepcion() {
                 value={busqueda}
                 onChange={e => setBusqueda(e.target.value)}
                 placeholder="Buscar cliente por DNI, Nombre o Correo..."
-                className="w-full bg-[#060606] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white text-sm focus:outline-none focus:border-blue-600 transition-colors"
+                className="w-full bg-[#070709] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white text-sm focus:outline-none focus:border-blue-500/60 transition-colors placeholder:text-gray-600"
               />
             </div>
 
             {/* Chips de filtro */}
-            <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+            <div className="flex gap-1.5 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 p-1 rounded-2xl bg-black/40 border border-white/5 relative">
               {[
                 { id: 'TODOS', label: 'Todos' },
                 { id: 'ACTIVA', label: 'Activos' },
-                { id: 'VENCIDA', label: 'Vencidos / Morosos' },
+                { id: 'VENCIDA', label: 'Vencidos / Inactivos' },
                 { id: 'SIN_MEMBRESIA', label: 'Sin Membresía' }
               ].map(f => (
                 <button
                   key={f.id}
                   onClick={() => setFiltroEstado(f.id)}
-                  className={`px-3.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
+                  className={`relative px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-colors z-10 ${
                     filtroEstado === f.id
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                      : 'bg-[#141414] text-gray-400 hover:text-white border border-white/5'
+                      ? 'text-white'
+                      : 'text-gray-400 hover:text-white'
                   }`}
                 >
+                  {filtroEstado === f.id && (
+                    <motion.div
+                      layoutId="filtroRecepcionPill"
+                      transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
+                      className="absolute inset-0 bg-blue-600 rounded-xl shadow-md border border-blue-400/30 -z-10"
+                    />
+                  )}
                   {f.label}
                 </button>
               ))}
@@ -413,7 +426,7 @@ export default function Recepcion() {
           </div>
 
           {/* Tabla de Clientes */}
-          <div className="bg-[#0f0f0f] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="bg-[#0e0e12]/80 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-[0_20px_45px_-15px_rgba(0,0,0,0.7),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-[#141414] text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5">
@@ -441,7 +454,7 @@ export default function Recepcion() {
                         </td>
                         <td className="p-5">
                           <p className="font-bold text-white text-base leading-tight">{s.nombres} {s.apellidos}</p>
-                          {s.telefono && <p className="text-xs text-gray-500 font-mono mt-0.5">📞 {s.telefono}</p>}
+                          {s.telefono && <p className="text-xs text-gray-500 font-mono mt-0.5 flex items-center gap-1.5"><Phone className="w-3 h-3 text-gray-400" /> {s.telefono}</p>}
                         </td>
                         <td className="p-5 text-gray-400 text-xs">
                           {s.correo || s.usuario?.correo || 'Sin correo registrado'}
@@ -451,11 +464,11 @@ export default function Recepcion() {
                             <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border ${
                               s.estadoMembresia === 'ACTIVA' 
                                 ? 'bg-green-500/10 text-green-400 border-green-500/20' 
-                                : s.estadoMembresia === 'MOROSO' || s.estadoMembresia === 'VENCIDA'
+                                : s.estadoMembresia === 'MOROSO' || s.estadoMembresia === 'INACTIVO' || s.estadoMembresia === 'VENCIDA'
                                 ? 'bg-red-500/10 text-red-400 border-red-500/20'
                                 : 'bg-white/5 text-gray-400 border-white/10'
                             }`}>
-                              {s.estadoMembresia || 'SIN MEMBRESÍA'}
+                              {s.estadoMembresia === 'MOROSO' ? 'INACTIVO' : (s.estadoMembresia || 'SIN MEMBRESÍA')}
                             </span>
                             {s.plan && s.plan !== '-' && (
                               <span className="text-xs text-gray-400 font-medium">({s.plan})</span>
@@ -470,7 +483,7 @@ export default function Recepcion() {
                             {/* Acceso */}
                             <button 
                               onClick={() => registrarAcceso(s.id)}
-                              className="bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/20 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                              className="bg-blue-600/15 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 px-3 py-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm hover:shadow-md hover:shadow-blue-600/25"
                               title="Registrar Ingreso / Acceso"
                             >
                               <ScanLine className="w-3.5 h-3.5" /> Acceso
@@ -479,7 +492,7 @@ export default function Recepcion() {
                             {/* Membresía / Pago */}
                             <button 
                               onClick={() => abrirModalPago(s)}
-                              className="bg-green-500/10 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/20 px-3 py-2 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                              className="bg-emerald-500/15 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 px-3 py-2 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm hover:shadow-md hover:shadow-emerald-600/25"
                               title="Cobrar / Renovar Membresía"
                             >
                               <CreditCard className="w-3.5 h-3.5" /> Plan
@@ -488,7 +501,7 @@ export default function Recepcion() {
                             {/* Editar */}
                             <button 
                               onClick={() => abrirModalEditar(s)}
-                              className="bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white p-2 rounded-lg transition"
+                              className="btn-icon p-2 rounded-xl text-gray-400 hover:text-white"
                               title="Editar datos del cliente"
                             >
                               <Edit2 className="w-4 h-4" />
@@ -497,7 +510,7 @@ export default function Recepcion() {
                             {/* Eliminar */}
                             <button 
                               onClick={() => { setSocioSeleccionado(s); setModalAbierto('ELIMINAR'); }}
-                              className="bg-transparent hover:bg-red-500/10 text-gray-500 hover:text-red-400 p-2 rounded-lg transition"
+                              className="btn-icon p-2 rounded-xl text-gray-500 hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/10"
                               title="Eliminar cliente"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -524,12 +537,13 @@ export default function Recepcion() {
         {/* MODAL: REGISTRAR / EDITAR CLIENTE */}
         <AnimatePresence>
         {(modalAbierto === 'NUEVO' || modalAbierto === 'EDITAR') && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0, scale: 0.95 }} 
-              className="bg-[#0f0f0f] border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.96, y: 8 }} 
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-[#0e0e12] border border-white/10 rounded-3xl w-full max-w-lg shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden"
             >
               <div className="p-6 border-b border-white/5 bg-[#0a0a0a] flex justify-between items-center">
                 <div>
@@ -697,16 +711,21 @@ export default function Recepcion() {
                   <button 
                     type="button" 
                     onClick={() => setModalAbierto(null)} 
-                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-gray-300 font-bold rounded-xl text-xs uppercase tracking-wider transition"
+                    className="btn-secondary flex-1 py-3 rounded-xl text-xs uppercase tracking-wider"
                   >
                     Cancelar
                   </button>
                   <button 
                     type="submit" 
                     disabled={guardando} 
-                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs uppercase tracking-wider transition disabled:opacity-50 shadow-lg shadow-blue-600/30"
+                    className="btn-primary flex-1 py-3 rounded-xl text-xs uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {guardando ? 'Guardando...' : (modalAbierto === 'NUEVO' ? 'Guardar Cliente' : 'Actualizar Cliente')}
+                    {guardando ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin-fast"></div>
+                        <span>Guardando...</span>
+                      </>
+                    ) : (modalAbierto === 'NUEVO' ? 'Guardar Cliente' : 'Actualizar Cliente')}
                   </button>
                 </div>
               </form>
@@ -718,12 +737,13 @@ export default function Recepcion() {
         {/* MODAL: COBRAR / RENOVAR MEMBRESÍA */}
         <AnimatePresence>
         {modalAbierto === 'PAGO' && socioSeleccionado && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0, scale: 0.95 }} 
-              className="bg-[#0f0f0f] border border-white/10 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.96, y: 8 }} 
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-[#0e0e12] border border-white/10 rounded-3xl w-full max-w-md shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden"
             >
               <div className="p-6 border-b border-white/5 bg-[#0a0a0a] flex justify-between items-center">
                 <div>
@@ -806,14 +826,14 @@ export default function Recepcion() {
                   <button 
                     type="button" 
                     onClick={() => setModalAbierto(null)} 
-                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-gray-300 font-bold rounded-xl text-xs uppercase tracking-wider transition"
+                    className="btn-secondary flex-1 py-3 rounded-xl text-xs uppercase tracking-wider"
                   >
                     Cancelar
                   </button>
                   <button 
                     type="submit" 
                     disabled={guardando || !formPago.idPlan} 
-                    className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl text-xs uppercase tracking-wider transition disabled:opacity-50 shadow-lg shadow-green-600/30 flex items-center justify-center gap-2"
+                    className="btn-success flex-1 py-3 rounded-xl text-xs uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     <DollarSign className="w-4 h-4" /> {guardando ? 'Procesando...' : 'Confirmar Pago'}
                   </button>
@@ -827,12 +847,13 @@ export default function Recepcion() {
         {/* MODAL: ELIMINAR SOCIO */}
         <AnimatePresence>
         {modalAbierto === 'ELIMINAR' && socioSeleccionado && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0, scale: 0.95 }} 
-              className="bg-[#0f0f0f] border border-red-500/30 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden p-6 text-center"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.96, y: 8 }} 
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-[#0e0e12] border border-red-500/30 rounded-3xl w-full max-w-md shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden p-6 text-center"
             >
               <div className="w-14 h-14 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Trash2 className="w-7 h-7 text-red-500" />
@@ -845,14 +866,14 @@ export default function Recepcion() {
               <div className="flex gap-3">
                 <button 
                   onClick={() => setModalAbierto(null)} 
-                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-gray-300 font-bold rounded-xl text-xs uppercase tracking-wider transition"
+                  className="btn-secondary flex-1 py-3 rounded-xl text-xs uppercase tracking-wider"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={ejecutarEliminar} 
                   disabled={guardando} 
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-red-600/30"
+                  className="btn-danger flex-1 py-3 rounded-xl text-xs uppercase tracking-wider disabled:opacity-50"
                 >
                   {guardando ? 'Eliminando...' : 'Sí, Eliminar'}
                 </button>

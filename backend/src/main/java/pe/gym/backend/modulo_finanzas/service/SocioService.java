@@ -112,7 +112,11 @@ public class SocioService {
                         .max(java.util.Comparator.comparing(Membresia::getFechaVencimiento))
                         .orElse(null);
                 if (mem != null) {
-                    m.put("estadoMembresia", mem.getEstado());
+                    String est = mem.getEstado();
+                    if ("MOROSO".equalsIgnoreCase(est)) {
+                        est = "INACTIVO";
+                    }
+                    m.put("estadoMembresia", est);
                     m.put("fechaVencimiento", mem.getFechaVencimiento() != null ? mem.getFechaVencimiento().toString() : "");
                     m.put("plan", mem.getPlanMembresia() != null ? mem.getPlanMembresia().getNombrePlan() : "Plan GYM");
                     m.put("idPlan", mem.getPlanMembresia() != null ? mem.getPlanMembresia().getId() : null);
@@ -158,7 +162,9 @@ public class SocioService {
             m.put("nombre", f[1]);
             m.put("dni", f[2]);
             m.put("telefono", f[3]);
-            m.put("estado", f[4]);
+            String est = f[4] == null ? "SIN_MEMBRESIA" : f[4].toString();
+            if ("MOROSO".equalsIgnoreCase(est)) est = "INACTIVO";
+            m.put("estado", est);
             m.put("vencimiento", f[5] == null ? "-" : f[5].toString());
             result.add(m);
         }

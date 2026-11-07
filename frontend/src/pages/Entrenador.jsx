@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { 
   Users, LogOut, Activity, Plus, Save, Search, CheckCircle, 
-  Dumbbell, Eye, Edit3, X, ChevronRight, Award, Flame, RefreshCw 
+  Dumbbell, Eye, Edit3, X, ChevronRight, Award, Flame, RefreshCw, Moon, Sparkles, Filter, Info, Play
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
@@ -86,7 +87,7 @@ const PRESETS_RUTINA = [
   }
 ];
 
-const GRUPOS_MUSCULARES = ['Todos', 'Pecho', 'Espalda', 'Piernas', 'Hombros', 'Brazos', 'Abdomen'];
+const GRUPOS_MUSCULARES = ['Todos', 'Pecho', 'Espalda', 'Piernas', 'Hombros', 'Brazos', 'Abdomen', 'Cardio'];
 
 export default function Entrenador() {
   const [socios, setSocios] = useState([]);
@@ -98,7 +99,13 @@ export default function Entrenador() {
   
   // Modales
   const [socioSeleccionado, setSocioSeleccionado] = useState(null);
-  const [modalAbierto, setModalAbierto] = useState(null); // 'RUTINA' | 'MEDICION' | 'VER_RUTINA' | 'NUEVO_EJERCICIO'
+  const [modalAbierto, setModalAbierto] = useState(null); // 'RUTINA' | 'MEDICION' | 'VER_RUTINA' | 'NUEVO_EJERCICIO' | 'CATALOGO_EJERCICIOS'
+  
+  // Catálogo visual y técnica de ejercicios (dataset de ejercicios con gifs)
+  const [busquedaCatalogo, setBusquedaCatalogo] = useState('');
+  const [grupoCatalogo, setGrupoCatalogo] = useState('Todos');
+  const [equipCatalogo, setEquipCatalogo] = useState('Todos');
+  const [ejercicioDetalleModal, setEjercicioDetalleModal] = useState(null);
   
   // Estado para Medición
   const [medicionForm, setMedicionForm] = useState({ peso: '', talla: '', porcentajeGrasa: '' });
@@ -153,6 +160,7 @@ export default function Entrenador() {
 
   const mostrarMensaje = (msg) => {
     setMensajeExito(msg);
+    toast.success(msg);
     setTimeout(() => setMensajeExito(''), 3500);
   };
 
@@ -210,6 +218,20 @@ export default function Entrenador() {
         diaSemana: e.diaSemana || 'Lunes'
       })));
     }
+  };
+
+  const agregarEjercicioDesdeCatalogo = (ej) => {
+    setRutinaEjercicios(prev => [
+      ...prev,
+      {
+        idEjercicio: ej.id,
+        series: 4,
+        repeticiones: 12,
+        diaSemana: diaAsignarActivo,
+        nombre: ej.nombreEjercicio
+      }
+    ]);
+    toast.success(`"${ej.nombreEjercicio}" agregado a ${diaAsignarActivo}`);
   };
 
   // Ver la rutina activa de un socio (sectorizada)
@@ -476,47 +498,47 @@ export default function Entrenador() {
             
             <button 
               onClick={() => setModalAbierto('NUEVO_EJERCICIO')}
-              className="bg-white/5 hover:bg-white/10 border border-white/10 text-white px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all"
+              className="btn-primary px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2"
             >
-              <Plus className="w-4 h-4 text-blue-500" /> Crear Ejercicio
+              <Plus className="w-4 h-4" /> Crear Ejercicio
             </button>
           </div>
 
           {/* Estadísticas de Rutinas */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <div className="bg-[#0f0f0f] border border-white/5 rounded-2xl p-5 flex items-center justify-between">
+            <div className="bg-[#0e0e12]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-5 flex items-center justify-between shadow-[0_15px_35px_-10px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
               <div>
                 <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Total Clientes</p>
                 <p className="text-3xl font-black text-white">{totalSocios}</p>
               </div>
-              <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center border border-white/5">
                 <Users className="w-6 h-6 text-gray-400" />
               </div>
             </div>
 
-            <div className="bg-[#0f0f0f] border border-green-500/20 rounded-2xl p-5 flex items-center justify-between">
+            <div className="bg-[#0e0e12]/80 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-5 flex items-center justify-between shadow-[0_15px_35px_-10px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(16,185,129,0.1)]">
               <div>
-                <p className="text-green-400 text-xs font-bold uppercase tracking-wider mb-1">Con Rutina Activa</p>
-                <p className="text-3xl font-black text-green-400">{conRutinaCount}</p>
+                <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">Con Rutina Activa</p>
+                <p className="text-3xl font-black text-emerald-400">{conRutinaCount}</p>
               </div>
-              <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-green-400" />
+              <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
+                <CheckCircle className="w-6 h-6 text-emerald-400" />
               </div>
             </div>
 
-            <div className="bg-[#0f0f0f] border border-amber-500/20 rounded-2xl p-5 flex items-center justify-between">
+            <div className="bg-[#0e0e12]/80 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-5 flex items-center justify-between shadow-[0_15px_35px_-10px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(245,158,11,0.1)]">
               <div>
                 <p className="text-amber-400 text-xs font-bold uppercase tracking-wider mb-1">Pendientes de Rutina</p>
                 <p className="text-3xl font-black text-amber-400">{sinRutinaCount}</p>
               </div>
-              <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20">
                 <Flame className="w-6 h-6 text-amber-400" />
               </div>
             </div>
           </div>
 
           {/* Barra de Filtro y Búsqueda */}
-          <div className="bg-[#0f0f0f] border border-white/5 rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="bg-[#0e0e12]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between shadow-[0_15px_35px_-10px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input 
@@ -529,7 +551,7 @@ export default function Entrenador() {
             </div>
 
             {/* Chips de filtro */}
-            <div className="flex gap-2 w-full md:w-auto">
+            <div className="flex gap-1.5 w-full md:w-auto p-1 rounded-2xl bg-black/40 border border-white/5 relative">
               {[
                 { id: 'TODOS', label: 'Todos' },
                 { id: 'CON_RUTINA', label: 'Con Rutina' },
@@ -538,12 +560,19 @@ export default function Entrenador() {
                 <button
                   key={f.id}
                   onClick={() => setFiltroRutina(f.id)}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex-1 md:flex-none ${
+                  className={`relative px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-colors z-10 flex-1 md:flex-none ${
                     filtroRutina === f.id
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                      : 'bg-[#141414] text-gray-400 hover:text-white border border-white/5'
+                      ? 'text-white'
+                      : 'text-gray-400 hover:text-white'
                   }`}
                 >
+                  {filtroRutina === f.id && (
+                    <motion.div
+                      layoutId="filtroEntrenadorPill"
+                      transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
+                      className="absolute inset-0 bg-blue-600 rounded-xl shadow-md border border-blue-400/30 -z-10"
+                    />
+                  )}
                   {f.label}
                 </button>
               ))}
@@ -580,11 +609,11 @@ export default function Entrenador() {
                     <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border ${
                       socio.estadoMembresia === 'ACTIVA' 
                         ? 'bg-green-500/10 text-green-400 border-green-500/20' 
-                        : socio.estadoMembresia === 'MOROSO'
+                        : socio.estadoMembresia === 'MOROSO' || socio.estadoMembresia === 'INACTIVO' || socio.estadoMembresia === 'VENCIDA'
                         ? 'bg-red-500/10 text-red-400 border-red-500/20'
                         : 'bg-white/5 text-gray-400 border-white/10'
                     }`}>
-                      {socio.estadoMembresia || 'SIN MEMBRESÍA'}
+                      {socio.estadoMembresia === 'MOROSO' ? 'INACTIVO' : (socio.estadoMembresia || 'SIN MEMBRESÍA')}
                     </span>
                   </div>
 
@@ -618,7 +647,7 @@ export default function Entrenador() {
                   {socio.tieneRutina && (
                     <button 
                       onClick={() => abrirVerRutina(socio)}
-                      className="flex-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                      className="flex-1 bg-blue-600/15 hover:bg-blue-600/25 text-blue-400 hover:text-white border border-blue-500/30 px-3 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
                     >
                       <Eye className="w-3.5 h-3.5" /> Ver Rutina
                     </button>
@@ -626,10 +655,10 @@ export default function Entrenador() {
 
                   <button 
                     onClick={() => abrirAsignarRutina(socio)}
-                    className={`flex-1 text-white px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg ${
+                    className={`flex-1 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 ${
                       socio.tieneRutina 
-                        ? 'bg-white/10 hover:bg-white/15 text-white border border-white/10' 
-                        : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                        ? 'btn-secondary' 
+                        : 'btn-primary'
                     }`}
                   >
                     {socio.tieneRutina ? <Edit3 className="w-3.5 h-3.5 text-blue-400" /> : <Plus className="w-3.5 h-3.5" />}
@@ -638,7 +667,7 @@ export default function Entrenador() {
 
                   <button 
                     onClick={() => { setSocioSeleccionado(socio); setModalAbierto('MEDICION'); }}
-                    className="bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border border-white/10"
+                    className="btn-secondary px-4 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
                   >
                     <Activity className="w-3.5 h-3.5 text-blue-400" /> Medir
                   </button>
@@ -659,12 +688,13 @@ export default function Entrenador() {
         {/* MODAL 1: ASIGNAR / CONFIGURAR RUTINA */}
         <AnimatePresence>
         {modalAbierto === 'RUTINA' && socioSeleccionado && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 10 }} 
+              initial={{ opacity: 0, scale: 0.96, y: 8 }} 
               animate={{ opacity: 1, scale: 1, y: 0 }} 
-              exit={{ opacity: 0, scale: 0.95, y: 10 }} 
-              className="bg-[#0f0f0f] border border-white/10 rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden"
+              exit={{ opacity: 0, scale: 0.96, y: 8 }} 
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-[#0e0e12] border border-white/10 rounded-3xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden"
             >
               {/* Header Modal */}
               <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#0a0a0a]">
@@ -794,10 +824,10 @@ export default function Entrenador() {
                         <div className="flex gap-2">
                           <button 
                             type="button" 
-                            onClick={() => setModalAbierto('NUEVO_EJERCICIO')}
-                            className="text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded-xl border border-white/10 hover:bg-white/5 transition"
+                            onClick={() => setModalAbierto('CATALOGO_EJERCICIOS')}
+                            className="text-xs bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-300 hover:text-white px-3.5 py-1.5 rounded-xl border border-blue-500/30 hover:border-blue-500/60 transition flex items-center gap-1.5 font-bold shadow-sm"
                           >
-                            + Catálogo
+                            <Sparkles className="w-3.5 h-3.5 text-blue-400" /> Catálogo Visual ({ejercicios.length})
                           </button>
                           <button 
                             type="button" 
@@ -809,6 +839,27 @@ export default function Entrenador() {
                         </div>
                       </div>
 
+                      {/* Chips de filtro por grupo muscular para el selector */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-3">
+                        <span className="text-[10px] text-gray-500 uppercase font-black tracking-wider flex-shrink-0 mr-1 flex items-center gap-1">
+                          <Filter className="w-3 h-3 text-gray-500" /> Filtrar selector:
+                        </span>
+                        {GRUPOS_MUSCULARES.map(g => (
+                          <button
+                            key={g}
+                            type="button"
+                            onClick={() => setGrupoFiltroSelector(g)}
+                            className={`px-2.5 py-0.5 rounded-lg text-xs font-bold transition flex-shrink-0 ${
+                              grupoFiltroSelector === g
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'bg-[#111] text-gray-400 hover:text-white border border-white/5'
+                            }`}
+                          >
+                            {g}
+                          </button>
+                        ))}
+                      </div>
+
                       {ejerciciosDelDia.length === 0 ? (
                         <div className="py-8 text-center border-2 border-dashed border-white/5 rounded-2xl">
                           <p className="text-sm font-bold text-gray-400 mb-1">
@@ -817,22 +868,55 @@ export default function Entrenador() {
                           <p className="text-xs text-gray-600 mb-3">
                             No hay ejercicios asignados. El cliente tendrá este día libre o de recuperación.
                           </p>
-                          <button
-                            type="button"
-                            onClick={() => agregarEjercicioAlDia(diaAsignarActivo)}
-                            className="text-xs font-bold text-blue-400 hover:text-blue-300 underline"
-                          >
-                            + Asignar ejercicios para el {diaAsignarActivo}
-                          </button>
+                          <div className="flex justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => agregarEjercicioAlDia(diaAsignarActivo)}
+                              className="text-xs font-bold text-blue-400 hover:text-blue-300 underline"
+                            >
+                              + Asignar ejercicios para el {diaAsignarActivo}
+                            </button>
+                            <span className="text-gray-700">|</span>
+                            <button
+                              type="button"
+                              onClick={() => setModalAbierto('CATALOGO_EJERCICIOS')}
+                              className="text-xs font-bold text-purple-400 hover:text-purple-300 underline flex items-center gap-1"
+                            >
+                              <Sparkles className="w-3 h-3" /> Explorar catálogo con GIFs
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <div className="space-y-3">
                           {ejerciciosDelDia.map((ej, numIdx) => {
                             const ejercicioInfo = ejercicios.find(e => e.id === Number(ej.idEjercicio));
+                            const ejerciciosFiltrados = grupoFiltroSelector === 'Todos' 
+                              ? ejercicios 
+                              : ejercicios.filter(e => e.grupoMuscular?.toLowerCase() === grupoFiltroSelector.toLowerCase());
+
                             return (
                               <div key={ej.indexGlobal} className="bg-[#050505] p-3.5 rounded-2xl border border-white/10 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                                 <span className="text-gray-500 font-mono text-xs w-6 font-bold">{numIdx + 1}.</span>
                                 
+                                {/* Thumbnail interactivo del ejercicio */}
+                                {ejercicioInfo && (
+                                  <div 
+                                    onClick={() => setEjercicioDetalleModal(ejercicioInfo)}
+                                    className="w-12 h-12 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex-shrink-0 relative group cursor-pointer"
+                                    title="Click para ver animación y guía técnica"
+                                  >
+                                    <img 
+                                      src={ejercicioInfo.urlGif || ejercicioInfo.urlImagen} 
+                                      alt={ejercicioInfo.nombreEjercicio} 
+                                      className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                                      loading="lazy"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                      <Eye className="w-4 h-4 text-white" />
+                                    </div>
+                                  </div>
+                                )}
+
                                 {/* Selector de ejercicio */}
                                 <div className="flex-1 w-full min-w-0">
                                   <select 
@@ -840,17 +924,39 @@ export default function Entrenador() {
                                     onChange={e => actualizarEjercicio(ej.indexGlobal, 'idEjercicio', e.target.value)}
                                     className="w-full bg-[#111] border border-white/10 rounded-xl py-2 px-3 text-white focus:outline-none focus:border-blue-600 text-sm font-medium"
                                   >
-                                    <option value="">Seleccionar Ejercicio...</option>
-                                    {ejercicios.map(e => (
+                                    <option value="">Seleccionar Ejercicio ({ejerciciosFiltrados.length} disponibles)...</option>
+                                    {ejerciciosFiltrados.map(e => (
                                       <option key={e.id} value={e.id} className="bg-[#111]">
-                                        {e.nombreEjercicio} ({e.grupoMuscular})
+                                        {e.nombreEjercicio} — {e.grupoMuscular}{e.equipamiento ? ` [${e.equipamiento}]` : ''}
                                       </option>
                                     ))}
                                   </select>
-                                  {ejercicioInfo?.descripcion && (
-                                    <p className="text-[11px] text-gray-500 mt-1 pl-1 line-clamp-1 italic">
-                                      {ejercicioInfo.descripcion}
-                                    </p>
+
+                                  {ejercicioInfo && (
+                                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                      {ejercicioInfo.grupoMuscular && (
+                                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-600/10 text-blue-400 border border-blue-500/20">
+                                          {ejercicioInfo.grupoMuscular}
+                                        </span>
+                                      )}
+                                      {ejercicioInfo.equipamiento && (
+                                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-purple-600/10 text-purple-400 border border-purple-500/20">
+                                          {ejercicioInfo.equipamiento}
+                                        </span>
+                                      )}
+                                      {ejercicioInfo.musculoObjetivo && (
+                                        <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-400 border border-emerald-500/20">
+                                          {ejercicioInfo.musculoObjetivo}
+                                        </span>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => setEjercicioDetalleModal(ejercicioInfo)}
+                                        className="text-[10px] text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 font-semibold ml-auto"
+                                      >
+                                        <Eye className="w-3 h-3" /> Ver animación y técnica
+                                      </button>
+                                    </div>
                                   )}
                                 </div>
 
@@ -919,16 +1025,26 @@ export default function Entrenador() {
               <div className="p-6 border-t border-white/5 flex gap-3 bg-[#0a0a0a]">
                 <button 
                   onClick={() => setModalAbierto(null)} 
-                  className="flex-1 py-3.5 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition text-sm text-gray-300"
+                  className="btn-secondary flex-1 py-3.5 rounded-xl font-bold text-sm"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={guardarRutina} 
                   disabled={guardando} 
-                  className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 rounded-xl font-black uppercase tracking-wider transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-600/30"
+                  className="btn-primary flex-1 py-3.5 rounded-xl font-bold uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                 >
-                  <Save className="w-4 h-4" /> {guardando ? 'Guardando...' : 'Guardar y Asignar Rutina'}
+                  {guardando ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin-fast"></div>
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Guardar y Asignar Rutina</span>
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>
@@ -939,12 +1055,13 @@ export default function Entrenador() {
         {/* MODAL 2: VER RUTINA ACTUAL (SECTORIZADA POR DÍAS LUNES A SÁBADO) */}
         <AnimatePresence>
         {modalAbierto === 'VER_RUTINA' && socioSeleccionado && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0, scale: 0.95 }} 
-              className="bg-[#0f0f0f] border border-white/10 rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.96, y: 8 }} 
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-[#0e0e12] border border-white/10 rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden"
             >
               <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#0a0a0a]">
                 <div>
@@ -1054,17 +1171,48 @@ export default function Entrenador() {
                                 const nom = ej.ejercicio?.nombreEjercicio || ej.nombreEjercicio || ej.nombre || 'Ejercicio';
                                 const desc = ej.ejercicio?.descripcion || ej.descripcion || 'Sin descripción detallada';
                                 const grupo = ej.ejercicio?.grupoMuscular || ej.grupoMuscular || 'General';
+                                const equip = ej.ejercicio?.equipamiento || ej.equipamiento;
+                                const musc = ej.ejercicio?.musculoObjetivo || ej.musculoObjetivo;
+                                const gif = ej.ejercicio?.urlGif || ej.urlGif || ej.ejercicio?.urlImagen || ej.urlImagen;
+
                                 return (
                                   <div key={idx} className="bg-[#0f0f0f] border border-white/5 p-3.5 rounded-xl flex items-center justify-between gap-4 hover:border-white/10 transition">
+                                    {gif && (
+                                      <div 
+                                        onClick={() => setEjercicioDetalleModal(ej.ejercicio || ej)}
+                                        className="w-12 h-12 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex-shrink-0 relative group cursor-pointer"
+                                        title="Click para ver animación y técnica"
+                                      >
+                                        <img 
+                                          src={gif} 
+                                          alt={nom} 
+                                          className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                                          loading="lazy"
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                          <Eye className="w-4 h-4 text-white" />
+                                        </div>
+                                      </div>
+                                    )}
                                     <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-1">
+                                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                                         <span className="text-xs font-mono text-gray-500 font-bold">{idx + 1}.</span>
                                         <h5 className="font-bold text-white text-sm truncate">{nom}</h5>
                                         <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-600/10 text-blue-400 border border-blue-500/20">
                                           {grupo}
                                         </span>
+                                        {equip && (
+                                          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-purple-600/10 text-purple-400 border border-purple-500/20">
+                                            {equip}
+                                          </span>
+                                        )}
+                                        {musc && (
+                                          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-400 border border-emerald-500/20">
+                                            {musc}
+                                          </span>
+                                        )}
                                       </div>
-                                      <p className="text-[11px] text-gray-400 line-clamp-1 pl-4">
+                                      <p className="text-[11px] text-gray-400 line-clamp-2">
                                         {desc}
                                       </p>
                                     </div>
@@ -1077,8 +1225,9 @@ export default function Entrenador() {
                               })}
                             </div>
                           ) : (
-                            <div className="py-4 text-center text-gray-500 text-xs">
-                              🌙 Día de Descanso / Recuperación Activa programado para este día.
+                            <div className="py-4 text-center text-gray-500 text-xs flex items-center justify-center gap-2">
+                              <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                              <span>Día de Descanso / Recuperación Activa programado para este día.</span>
                             </div>
                           )}
                         </div>
@@ -1115,12 +1264,13 @@ export default function Entrenador() {
         {/* MODAL 3: MEDICIÓN BIOMÉTRICA */}
         <AnimatePresence>
         {modalAbierto === 'MEDICION' && socioSeleccionado && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0, scale: 0.95 }} 
-              className="bg-[#0f0f0f] border border-white/10 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.96, y: 8 }} 
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-[#0e0e12] border border-white/10 rounded-3xl w-full max-w-md shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden"
             >
               <div className="p-6 border-b border-white/5 bg-[#0a0a0a] text-center relative">
                 <button 
@@ -1205,7 +1355,7 @@ export default function Entrenador() {
                 <button 
                   type="submit" 
                   disabled={guardando} 
-                  className="w-full mt-4 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black uppercase tracking-wider transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 text-sm"
+                  className="w-full mt-4 py-3.5 btn-primary rounded-xl font-bold uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                 >
                   <Save className="w-4 h-4" /> {guardando ? 'Guardando...' : 'Registrar Medición'}
                 </button>
@@ -1218,12 +1368,13 @@ export default function Entrenador() {
         {/* MODAL 4: CREAR NUEVO EJERCICIO */}
         <AnimatePresence>
         {modalAbierto === 'NUEVO_EJERCICIO' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0, scale: 0.95 }} 
-              className="bg-[#0f0f0f] border border-white/10 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden"
+              initial={{ opacity: 0, scale: 0.96, y: 8 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.96, y: 8 }} 
+              transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+              className="bg-[#0e0e12] border border-white/10 rounded-3xl w-full max-w-md shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden"
             >
               <div className="p-6 border-b border-white/5 bg-[#0a0a0a] flex justify-between items-center">
                 <div>
@@ -1284,11 +1435,295 @@ export default function Entrenador() {
                 <button 
                   type="submit" 
                   disabled={guardando} 
-                  className="w-full mt-2 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black uppercase tracking-wider transition disabled:opacity-50 text-sm shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2"
+                  className="w-full mt-2 py-3.5 btn-primary rounded-xl font-bold uppercase tracking-wider disabled:opacity-50 text-sm flex items-center justify-center gap-2"
                 >
                   <Plus className="w-4 h-4" /> {guardando ? 'Guardando...' : 'Registrar en Catálogo'}
                 </button>
               </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* MODAL: CATÁLOGO VISUAL DE EJERCICIOS (1,324+ EJERCICIOS) */}
+        {modalAbierto === 'CATALOGO_EJERCICIOS' && (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-[#0a0a0a] border border-white/10 rounded-3xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-white/10 flex items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-black text-xl text-white tracking-tight">Catálogo Visual de Ejercicios</h3>
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-600/10 text-blue-400 border border-blue-500/20">
+                      {ejercicios.length} Disponibles
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Dataset profesional con animaciones GIF y técnica paso a paso. Haz clic en "Asignar" para agregarlo al <strong className="text-blue-400">{diaAsignarActivo}</strong>.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setModalAbierto(socioSeleccionado ? 'RUTINA' : null)} 
+                  className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Filtros y Buscador */}
+              <div className="p-4 border-b border-white/10 bg-[#070707] space-y-3">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={busquedaCatalogo}
+                    onChange={e => setBusquedaCatalogo(e.target.value)}
+                    placeholder="Buscar por nombre, técnica, músculo o equipamiento (ej. Bench Press, Squat, Mancuerna, Pecho)..."
+                    className="w-full bg-[#111] border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-600"
+                  />
+                  {busquedaCatalogo && (
+                    <button 
+                      onClick={() => setBusquedaCatalogo('')} 
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-xs"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  <span className="text-[10px] text-gray-500 uppercase font-black tracking-wider mr-1 flex-shrink-0">
+                    Grupo:
+                  </span>
+                  {GRUPOS_MUSCULARES.map(g => (
+                    <button
+                      key={g}
+                      onClick={() => setGrupoCatalogo(g)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition flex-shrink-0 ${
+                        grupoCatalogo === g
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'bg-[#111] text-gray-400 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  <span className="text-[10px] text-gray-500 uppercase font-black tracking-wider mr-1 flex-shrink-0">
+                    Equipo:
+                  </span>
+                  {['Todos', 'Barra', 'Mancuernas', 'Máquina', 'Polea', 'Peso Corporal'].map(eq => (
+                    <button
+                      key={eq}
+                      onClick={() => setEquipCatalogo(eq)}
+                      className={`px-3 py-0.5 rounded-lg text-xs font-bold transition flex-shrink-0 ${
+                        equipCatalogo === eq
+                          ? 'bg-purple-600 text-white shadow-sm'
+                          : 'bg-[#111] text-gray-400 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      {eq}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Grid de ejercicios */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin">
+                {(() => {
+                  const filtrados = ejercicios.filter(e => {
+                    if (grupoCatalogo !== 'Todos' && e.grupoMuscular?.toLowerCase() !== grupoCatalogo.toLowerCase()) {
+                      return false;
+                    }
+                    if (equipCatalogo !== 'Todos' && (!e.equipamiento || !e.equipamiento.toLowerCase().includes(equipCatalogo.toLowerCase()))) {
+                      return false;
+                    }
+                    if (busquedaCatalogo.trim()) {
+                      const q = busquedaCatalogo.trim().toLowerCase();
+                      const matchNom = e.nombreEjercicio?.toLowerCase().includes(q);
+                      const matchDesc = e.descripcion?.toLowerCase().includes(q);
+                      const matchEq = e.equipamiento?.toLowerCase().includes(q);
+                      const matchObj = e.musculoObjetivo?.toLowerCase().includes(q);
+                      const matchGrupo = e.grupoMuscular?.toLowerCase().includes(q);
+                      if (!matchNom && !matchDesc && !matchEq && !matchObj && !matchGrupo) return false;
+                    }
+                    return true;
+                  });
+
+                  if (filtrados.length === 0) {
+                    return (
+                      <div className="py-16 text-center text-gray-500">
+                        <Dumbbell className="w-10 h-10 mx-auto text-gray-600 mb-2 opacity-50" />
+                        <p className="font-bold text-sm">No se encontraron ejercicios con ese criterio</p>
+                        <p className="text-xs text-gray-600 mt-1">Intenta con otra palabra o selecciona otro grupo muscular</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {filtrados.slice(0, 120).map(ej => (
+                        <div 
+                          key={ej.id} 
+                          className="bg-[#0e0e0e] hover:bg-[#131313] border border-white/5 hover:border-white/15 rounded-2xl p-3.5 transition flex flex-col justify-between gap-3 group"
+                        >
+                          <div className="flex gap-3 items-start">
+                            <div 
+                              onClick={() => setEjercicioDetalleModal(ej)}
+                              className="w-16 h-16 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex-shrink-0 relative cursor-pointer"
+                              title="Click para agrandar técnica"
+                            >
+                              <img 
+                                src={ej.urlGif || ej.urlImagen} 
+                                alt={ej.nombreEjercicio} 
+                                className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                                loading="lazy"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                                <Eye className="w-4 h-4 text-white" />
+                              </div>
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-white text-sm truncate" title={ej.nombreEjercicio}>
+                                {ej.nombreEjercicio}
+                              </h4>
+                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                {ej.grupoMuscular && (
+                                  <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-600/10 text-blue-400 border border-blue-500/20">
+                                    {ej.grupoMuscular}
+                                  </span>
+                                )}
+                                {ej.equipamiento && (
+                                  <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-600/10 text-purple-400 border border-purple-500/20">
+                                    {ej.equipamiento}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-gray-400 line-clamp-2 mt-1.5 leading-relaxed">
+                                {ej.descripcion || 'Sin descripción técnica'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-white/5 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEjercicioDetalleModal(ej)}
+                              className="text-[11px] text-gray-400 hover:text-white flex items-center gap-1 font-semibold"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-blue-400" /> Ver Guía
+                            </button>
+
+                            {socioSeleccionado && (
+                              <button
+                                type="button"
+                                onClick={() => agregarEjercicioDesdeCatalogo(ej)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 transition shadow-sm"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> Asignar a {diaAsignarActivo}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* MODAL: DETALLE Y ANIMACIÓN TÉCNICA EN ALTA DEFINICIÓN */}
+        {ejercicioDetalleModal && (
+          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0b0b0b] border border-white/15 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col"
+            >
+              <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                <div>
+                  <h3 className="font-black text-lg text-white">
+                    {ejercicioDetalleModal.nombreEjercicio || ejercicioDetalleModal.nombre}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-600/10 text-blue-400 border border-blue-500/20">
+                      {ejercicioDetalleModal.grupoMuscular || 'General'}
+                    </span>
+                    {ejercicioDetalleModal.equipamiento && (
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-purple-600/10 text-purple-400 border border-purple-500/20">
+                        {ejercicioDetalleModal.equipamiento}
+                      </span>
+                    )}
+                    {ejercicioDetalleModal.musculoObjetivo && (
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-400 border border-emerald-500/20">
+                        {ejercicioDetalleModal.musculoObjetivo}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setEjercicioDetalleModal(null)}
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Vista visual animada */}
+              <div className="p-4 bg-black flex justify-center items-center border-b border-white/5">
+                <div className="w-72 h-72 rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center relative">
+                  <img 
+                    src={ejercicioDetalleModal.urlGif || ejercicioDetalleModal.urlImagen} 
+                    alt={ejercicioDetalleModal.nombreEjercicio} 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+
+              {/* Explicación técnica */}
+              <div className="p-5 space-y-3 max-h-56 overflow-y-auto scrollbar-thin">
+                <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5 text-blue-400" /> Instrucciones Técnicas y Postura
+                </h5>
+                <p className="text-sm text-gray-300 leading-relaxed">
+                  {ejercicioDetalleModal.descripcion || 'Realizar movimiento completo, manteniendo tensión constante y respiración coordinada.'}
+                </p>
+              </div>
+
+              <div className="p-4 border-t border-white/10 bg-[#070707] flex justify-end gap-2">
+                {modalAbierto === 'RUTINA' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      agregarEjercicioDesdeCatalogo(ejercicioDetalleModal);
+                      setEjercicioDetalleModal(null);
+                    }}
+                    className="btn-primary px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" /> Asignar a {diaAsignarActivo}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setEjercicioDetalleModal(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/15 text-white transition"
+                >
+                  Cerrar
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

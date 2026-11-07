@@ -24,12 +24,16 @@ public class EntrenamientoService {
     private final EntrenadorRepository entrenadorRepository;
 
     private final pe.gym.backend.modulo_seguridad.repository.UsuarioRepository usuarioRepository;
+    private final pe.gym.backend.modulo_seguridad.repository.RolRepository rolRepository;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     public EntrenamientoService(RutinaRepository rutinaRepository, RutinaEjercicioRepository rutinaEjercicioRepository,
                                 EjercicioRepository ejercicioRepository, MedicionBiometricaRepository medicionRepository,
                                 MetaObjetivoRepository metaRepository, SocioRepository socioRepository,
                                 EntrenadorRepository entrenadorRepository,
-                                pe.gym.backend.modulo_seguridad.repository.UsuarioRepository usuarioRepository) {
+                                pe.gym.backend.modulo_seguridad.repository.UsuarioRepository usuarioRepository,
+                                pe.gym.backend.modulo_seguridad.repository.RolRepository rolRepository,
+                                org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.rutinaRepository = rutinaRepository;
         this.rutinaEjercicioRepository = rutinaEjercicioRepository;
         this.ejercicioRepository = ejercicioRepository;
@@ -38,6 +42,8 @@ public class EntrenamientoService {
         this.socioRepository = socioRepository;
         this.entrenadorRepository = entrenadorRepository;
         this.usuarioRepository = usuarioRepository;
+        this.rolRepository = rolRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -146,14 +152,20 @@ public class EntrenamientoService {
                 ej.put("nombreEjercicio", ejEntity.getNombreEjercicio());
                 ej.put("descripcion", ejEntity.getDescripcion() != null ? ejEntity.getDescripcion() : "");
                 ej.put("grupoMuscular", ejEntity.getGrupoMuscular() != null ? ejEntity.getGrupoMuscular() : "");
+                ej.put("musculoObjetivo", ejEntity.getMusculoObjetivo() != null ? ejEntity.getMusculoObjetivo() : "");
+                ej.put("equipamiento", ejEntity.getEquipamiento() != null ? ejEntity.getEquipamiento() : "");
                 ej.put("urlGif", ejEntity.getUrlGif() != null ? ejEntity.getUrlGif() : "");
+                ej.put("urlImagen", ejEntity.getUrlImagen() != null ? ejEntity.getUrlImagen() : "");
 
                 java.util.Map<String, Object> sub = new java.util.LinkedHashMap<>();
                 sub.put("id", ejEntity.getId());
                 sub.put("nombreEjercicio", ejEntity.getNombreEjercicio());
                 sub.put("descripcion", ejEntity.getDescripcion() != null ? ejEntity.getDescripcion() : "");
                 sub.put("grupoMuscular", ejEntity.getGrupoMuscular() != null ? ejEntity.getGrupoMuscular() : "");
+                sub.put("musculoObjetivo", ejEntity.getMusculoObjetivo() != null ? ejEntity.getMusculoObjetivo() : "");
+                sub.put("equipamiento", ejEntity.getEquipamiento() != null ? ejEntity.getEquipamiento() : "");
                 sub.put("urlGif", ejEntity.getUrlGif() != null ? ejEntity.getUrlGif() : "");
+                sub.put("urlImagen", ejEntity.getUrlImagen() != null ? ejEntity.getUrlImagen() : "");
                 ej.put("ejercicio", sub);
             }
             ejs.add(ej);
@@ -214,9 +226,46 @@ public class EntrenamientoService {
         return m;
     }
     
-    @Transactional
+    @Transactional(readOnly = true)
     public List<Ejercicio> listarEjercicios() {
-        return ejercicioRepository.findAll();
+        return listarEjercicios(null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Ejercicio> listarEjercicios(String grupoMuscular, String equipamiento, String busqueda) {
+        List<Ejercicio> todos = ejercicioRepository.findAll();
+        if ((grupoMuscular == null || grupoMuscular.isBlank() || grupoMuscular.equalsIgnoreCase("Todos")) &&
+            (equipamiento == null || equipamiento.isBlank() || equipamiento.equalsIgnoreCase("Todos")) &&
+            (busqueda == null || busqueda.isBlank())) {
+            return todos;
+        }
+
+        final String q = busqueda != null ? busqueda.trim().toLowerCase() : null;
+        return todos.stream()
+                .filter(e -> {
+                    if (grupoMuscular != null && !grupoMuscular.isBlank() && !grupoMuscular.equalsIgnoreCase("Todos")) {
+                        if (e.getGrupoMuscular() == null || !e.getGrupoMuscular().equalsIgnoreCase(grupoMuscular.trim())) {
+                            return false;
+                        }
+                    }
+                    if (equipamiento != null && !equipamiento.isBlank() && !equipamiento.equalsIgnoreCase("Todos")) {
+                        if (e.getEquipamiento() == null || !e.getEquipamiento().equalsIgnoreCase(equipamiento.trim())) {
+                            return false;
+                        }
+                    }
+                    if (q != null && !q.isEmpty()) {
+                        boolean matchNombre = e.getNombreEjercicio() != null && e.getNombreEjercicio().toLowerCase().contains(q);
+                        boolean matchDesc = e.getDescripcion() != null && e.getDescripcion().toLowerCase().contains(q);
+                        boolean matchGrupo = e.getGrupoMuscular() != null && e.getGrupoMuscular().toLowerCase().contains(q);
+                        boolean matchObj = e.getMusculoObjetivo() != null && e.getMusculoObjetivo().toLowerCase().contains(q);
+                        boolean matchEq = e.getEquipamiento() != null && e.getEquipamiento().toLowerCase().contains(q);
+                        if (!matchNombre && !matchDesc && !matchGrupo && !matchObj && !matchEq) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Transactional
