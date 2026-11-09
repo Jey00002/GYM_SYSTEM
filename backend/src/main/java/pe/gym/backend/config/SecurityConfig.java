@@ -64,18 +64,20 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
         
-        Set<String> origins = new LinkedHashSet<>();
-        origins.add("http://localhost:5173");
+        Set<String> originPatterns = new LinkedHashSet<>();
+        originPatterns.add("http://localhost:5173");
+        originPatterns.add("https://*.vercel.app");
+        originPatterns.add("*");
         if (frontendUrl != null && !frontendUrl.isBlank()) {
             for (String origin : frontendUrl.split(",")) {
                 String clean = origin.trim();
                 if (!clean.isEmpty()) {
-                    origins.add(clean);
+                    originPatterns.add(clean);
                 }
             }
         }
         
-        cfg.setAllowedOrigins(new ArrayList<>(origins));
+        cfg.setAllowedOriginPatterns(new ArrayList<>(originPatterns));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setAllowCredentials(true);
