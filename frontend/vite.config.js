@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://gymsystem-backend-lx3y.onrender.com',
+        target: 'http://localhost:8080',
         changeOrigin: true
       }
     }
